@@ -14,6 +14,7 @@ dist/
 tmp_run_*.py
 tmp_*.py
 .git
+.kiro
 *.log
 *.sqlite3
 node_modules/

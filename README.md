@@ -1,7 +1,17 @@
-gurddy-mcp
-=========
+# Gurddy MCP Server
 
-This repository contains a fully functional MCP (Model Context Protocol) server, providing solutions for Constraint Satisfaction Problems (CSP) and Linear Programming (LP). It is based on the `gurddy` package and supports solving a variety of classic problems.
+[![PyPI version](https://badge.fury.io/py/gurddy-mcp.svg)](https://pypi.org/project/gurddy_mcp/)
+[![Python Support](https://img.shields.io/pypi/pyversions/gurddy_mcp.svg)](https://pypi.org/project/gurddy_mcp/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-gurddy--mcp.fly.dev-blue)](https://gurddy-mcp.fly.dev)
+
+A fully functional MCP (Model Context Protocol) server providing solutions for Constraint Satisfaction Problems (CSP) and Linear Programming (LP). Built on the `gurddy` optimization library, it supports solving a variety of classic problems through multiple interfaces.
+
+**🚀 Quick Start:** `pip install gurddy_mcp && gurddy-mcp run-example n_queens`
+
+**🌐 Live Demo:** [https://gurddy-mcp.fly.dev](https://gurddy-mcp.fly.dev)
+
+**📦 PyPI Package:** [https://pypi.org/project/gurddy_mcp](https://pypi.org/project/gurddy_mcp)
 
 ## Main Features
 
@@ -22,15 +32,37 @@ This repository contains a fully functional MCP (Model Context Protocol) server,
 - Comprehensive error handling and performance monitoring
 - Supports online solving of various CSP and LP problems
 
-## Quick Start
+## Installation
 
-### Environment Preparation
+### From PyPI (Recommended)
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Install the latest stable version
+pip install gurddy_mcp
 
-# Or manually install the main dependencies
-pip install fastapi uvicorn gurddy pulp requests
+# Or install with development dependencies
+pip install gurddy_mcp[dev]
+```
+
+### From Source
+```bash
+# Clone the repository
+git clone https://github.com/novvoo/gurddy-mcp.git
+cd gurddy-mcp
+
+# Install in development mode
+pip install -e .
+
+# Or install dependencies manually
+pip install -r requirements.txt
+```
+
+### Verify Installation
+```bash
+# Check if installation was successful
+gurddy-mcp info
+
+# Run a quick example
+gurddy-mcp run-example n_queens
 ```
 
 ## Usage
@@ -39,42 +71,36 @@ pip install fastapi uvicorn gurddy pulp requests
 
 Run examples directly:
 ```bash
-# Run N-Queens problem
-python -m mcp_server.server run-example n_queens
+# Using the installed command (after pip install gurddy_mcp)
+gurddy-mcp run-example n_queens
+gurddy-mcp run-example graph_coloring
+gurddy-mcp run-example map_coloring
+gurddy-mcp run-example scheduling
+gurddy-mcp run-example logic_puzzles
+gurddy-mcp run-example optimized_csp
+gurddy-mcp run-example lp
+gurddy-mcp run-example optimized_lp
 
-# Run graph coloring examples
-python -m mcp_server.server run-example graph_coloring
-
-# Run map coloring examples  
-python -m mcp_server.server run-example map_coloring
-
-# Run scheduling problems
-python -m mcp_server.server run-example scheduling
-
-# Run logic puzzles (including Einstein's Zebra puzzle)
-python -m mcp_server.server run-example logic_puzzles
-
-# Run optimized CSP examples (Sudoku solver)
-python -m mcp_server.server run-example optimized_csp
-
-# Run linear programming examples
-python -m mcp_server.server run-example lp
-
-# Run optimized LP examples
-python -m mcp_server.server run-example optimized_lp
-
-# Get gurddy package information
-python -m mcp_server.server info
+# Get package information
+gurddy-mcp info
 
 # Install or upgrade gurddy
-python -m mcp_server.server install [--upgrade]
+gurddy-mcp install [--upgrade]
+
+# Alternative: using Python module (from source)
+python -m mcp_server.server run-example n_queens
+python -m mcp_server.server info
 ```
 
 ### 2. HTTP API Service
 
 Start the HTTP server:
 ```bash
+# After installing gurddy_mcp
 uvicorn mcp_server.http_api:app --host 127.0.0.1 --port 8080
+
+# Or use the live demo
+# https://gurddy-mcp.fly.dev
 ```
 
 Access the API documentation: http://127.0.0.1:8080/docs
@@ -82,6 +108,19 @@ Access the API documentation: http://127.0.0.1:8080/docs
 ### 3. MCP (Model Context Protocol) Integration
 
 Configure in `.kiro/settings/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "gurddy-mcp": {
+      "command": "gurddy-mcp",
+      "disabled": false,
+      "autoApprove": ["run_example", "info", "install"]
+    }
+  }
+}
+```
+
+Alternative configuration (from source):
 ```json
 {
   "mcpServers": {
@@ -121,24 +160,38 @@ if result["success"]:
 
 ### Direct Module Import
 ```python
-# Install as dependency
-pip install git+https://github.com/your-username/gurddy-mcp.git
+# Install from PyPI
+pip install gurddy_mcp
 
 # Use in your project
-from mcp_server.handlers.gurddy import solve_n_queens, solve_graph_coloring
+from mcp_server import solve_n_queens, solve_graph_coloring
 
 result = solve_n_queens(8)
 if result['success']:
     print(f"Solution: {result['solution']}")
+
+# Or import from specific modules
+from mcp_server.handlers.gurddy import solve_n_queens, solve_sudoku
 ```
 
 ### Docker Integration
+```dockerfile
+# Dockerfile
+FROM python:3.11-slim
+RUN pip install gurddy_mcp
+EXPOSE 8080
+CMD ["uvicorn", "mcp_server.http_api:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
 ```yaml
 # docker-compose.yml
 version: '3.8'
 services:
   gurddy-mcp:
-    image: your-registry/gurddy-mcp
+    image: python:3.11-slim
+    command: >
+      sh -c "pip install gurddy_mcp && 
+             uvicorn mcp_server.http_api:app --host 0.0.0.0 --port 8080"
     ports:
       - "8080:8080"
   your-app:
@@ -319,7 +372,7 @@ json={"n": 8})
 
 ## Available Examples
 
-All examples can be run using `python -m mcp_server.server run-example <name>`:
+All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_server.server run-example <name>`:
 
 ### CSP Examples ✅
 - **n_queens** - N-Queens problem (4, 6, 8 queens with visual board display)
@@ -388,6 +441,10 @@ python -c "import gurddy, pulp; print('All dependencies installed')"
 ### Example Debugging
 Run examples directly for debugging:
 ```bash
+# After installing gurddy_mcp
+python -c "from mcp_server.examples import n_queens; n_queens.main()"
+
+# Or from source
 python mcp_server/examples/n_queens.py
 python mcp_server/examples/graph_coloring.py
 python mcp_server/examples/logic_puzzles.py

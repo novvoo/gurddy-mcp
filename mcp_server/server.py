@@ -19,7 +19,7 @@ from mcp_server.tools.gurddy_demo import run as demo_run
 
 
 def main(argv: list[str] | None = None) -> int:
-	p = argparse.ArgumentParser(prog="mcp-gurddy")
+	p = argparse.ArgumentParser(prog="gurddy-mcp")
 	sub = p.add_subparsers(dest='cmd')
 
 	sp_install = sub.add_parser('install')

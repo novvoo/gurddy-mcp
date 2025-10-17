@@ -54,7 +54,7 @@ hypothesis/
 
 # Pyre type checker
 .pyre/
-
+.github
 # IDEs
 .vscode/
 .idea/

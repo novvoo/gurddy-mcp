@@ -1,0 +1,16 @@
+include README.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+recursive-include mcp_server *.py
+recursive-include mcp_server/examples *.py
+exclude test_*.py
+exclude *_test.py
+prune tests/
+prune .git/
+prune .kiro/
+exclude .gitignore
+exclude .dockerignore
+exclude Dockerfile
+exclude fly.toml
+exclude fly-template.toml

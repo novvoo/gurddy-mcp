@@ -16,6 +16,7 @@ tmp_*.py
 .git
 .kiro
 *.log
+.github
 *.sqlite3
 node_modules/
 __pycache__

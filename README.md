@@ -35,7 +35,42 @@ pip install fastapi uvicorn gurddy pulp requests
 
 ## Usage
 
-### 1. HTTP API Service
+### 1. Command Line Interface
+
+Run examples directly:
+```bash
+# Run N-Queens problem
+python -m mcp_server.server run-example n_queens
+
+# Run graph coloring examples
+python -m mcp_server.server run-example graph_coloring
+
+# Run map coloring examples  
+python -m mcp_server.server run-example map_coloring
+
+# Run scheduling problems
+python -m mcp_server.server run-example scheduling
+
+# Run logic puzzles (including Einstein's Zebra puzzle)
+python -m mcp_server.server run-example logic_puzzles
+
+# Run optimized CSP examples (Sudoku solver)
+python -m mcp_server.server run-example optimized_csp
+
+# Run linear programming examples
+python -m mcp_server.server run-example lp
+
+# Run optimized LP examples
+python -m mcp_server.server run-example optimized_lp
+
+# Get gurddy package information
+python -m mcp_server.server info
+
+# Install or upgrade gurddy
+python -m mcp_server.server install [--upgrade]
+```
+
+### 2. HTTP API Service
 
 Start the HTTP server:
 ```bash
@@ -44,28 +79,71 @@ uvicorn mcp_server.http_api:app --host 127.0.0.1 --port 8080
 
 Access the API documentation: http://127.0.0.1:8080/docs
 
-### 2. Directly Calling the Demo
+### 3. MCP (Model Context Protocol) Integration
 
-Run the complete CSP functionality demonstration:
-```bash
-python demo_csp_examples.py
+Configure in `.kiro/settings/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "gurddy-mcp": {
+      "command": "python",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "PYTHONPATH": "."
+      },
+      "disabled": false,
+      "autoApprove": ["run_example", "info", "install"]
+    }
+  }
+}
 ```
 
-Test the API functions (no server required):
-```bash
-python test_api_direct.py
+## Integration in Other Projects
+
+### HTTP API Client
+```python
+import requests
+
+# Use the deployed service
+BASE_URL = "https://gurddy-mcp.fly.dev"
+
+# Run examples
+response = requests.post(f"{BASE_URL}/run-example", json={"example": "n_queens"})
+print(response.json())
+
+# Solve specific problems
+response = requests.post(f"{BASE_URL}/solve-n-queens", json={"n": 8})
+result = response.json()
+if result["success"]:
+    print(f"8-Queens solution: {result['solution']}")
 ```
 
-### 3. Command Line Tools
+### Direct Module Import
+```python
+# Install as dependency
+pip install git+https://github.com/your-username/gurddy-mcp.git
 
-Check/Install gurddy:
-```bash
-python -c "from mcp_server.tools.gurddy_install import run; print(run({'package':'gurddy'}))"
+# Use in your project
+from mcp_server.handlers.gurddy import solve_n_queens, solve_graph_coloring
+
+result = solve_n_queens(8)
+if result['success']:
+    print(f"Solution: {result['solution']}")
 ```
 
-Run example:
-```bash
-python -c "from mcp_server.tools.gurddy_demo import run; print(run({'example':'csp'}))"
+### Docker Integration
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  gurddy-mcp:
+    image: your-registry/gurddy-mcp
+    ports:
+      - "8080:8080"
+  your-app:
+    build: .
+    environment:
+      - GURDDY_API_URL=http://gurddy-mcp:8080
 ```
 
 ## API endpoint
@@ -168,11 +246,56 @@ test_api_direct.py # Direct API Test
 test_csp_api.py # HTTP API Test
 CSP_API_GUIDE.md # API Usage Guide
 
-## Usage Examples
+## Example Output
+
+### N-Queens Problem
+```bash
+$ python -m mcp_server.server run-example n_queens
+
+Solving 8-Queens problem...
+
+8-Queens Solution:
++---+---+---+---+---+---+---+---+
+| Q |   |   |   |   |   |   |   |
++---+---+---+---+---+---+---+---+
+|   |   |   |   | Q |   |   |   |
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   |   | Q |
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   | Q |   |   |
++---+---+---+---+---+---+---+---+
+|   |   | Q |   |   |   |   |   |
++---+---+---+---+---+---+---+---+
+|   |   |   |   |   |   | Q |   |
++---+---+---+---+---+---+---+---+
+|   | Q |   |   |   |   |   |   |
++---+---+---+---+---+---+---+---+
+|   |   |   | Q |   |   |   |   |
++---+---+---+---+---+---+---+---+
+Queen positions: (0,0), (1,4), (2,7), (3,5), (4,2), (5,6), (6,1), (7,3)
+```
+
+### Logic Puzzles
+```bash
+$ python -m mcp_server.server run-example logic_puzzles
+
+Solving Simple Logic Puzzle:
+Solution:
+Position 1: Alice has Cat in Green house
+Position 2: Bob has Dog in Red house  
+Position 3: Carol has Fish in Blue house
+
+Solving the Famous Zebra Puzzle (Einstein's Riddle)...
+ANSWERS:
+Who owns the zebra? Ukrainian (House 5)
+Who drinks water? Japanese (House 2)
+```
+
+## HTTP API Examples
 
 ### Classic Problem Solving
 
-#### Coloring the Australian Map
+#### Australian Map Coloring
 ```python
 import requests
 
@@ -187,36 +310,42 @@ response = requests.post("http://127.0.0.1:8080/solve-map-coloring", json={
 })
 ```
 
-#### 8 Queen Problem
+#### 8-Queens Problem
 ```python
-response= requests.post("http://127.0.0.1:8080/solve-n-queens",
+response = requests.post("http://127.0.0.1:8080/solve-n-queens",
 json={"n": 8})
 ```
 
-#### Petersen Graph Coloring
-```python
-response = requests.post("http://127.0.0.1:8080/solve-graph-coloring", json={
-"edges": [
-[0,1], [1,2], [2,3], [3,4], [4,0], # Outer loop
-[5,6], [6,7], [7,8], [8,9], [9,5], # Inner loop
-[0,5], [1,6], [2,7], [3,8], [4,9] # Connections
-],
-"num_vertices": 10,
-"max_colors": 3
-})
-```
+## Available Examples
 
-## Supported Problem Types
+All examples can be run using `python -m mcp_server.server run-example <name>`:
 
-### CSP Problems
+### CSP Examples ✅
+- **n_queens** - N-Queens problem (4, 6, 8 queens with visual board display)
+- **graph_coloring** - Graph coloring (Triangle, Square, Petersen graph, Wheel graph)
+- **map_coloring** - Map coloring (Australia, USA Western states, Europe)
+- **scheduling** - Scheduling problems (Course scheduling, meeting scheduling, resource allocation)
+- **logic_puzzles** - Logic puzzles (Simple logic puzzle, Einstein's Zebra puzzle)
+- **optimized_csp** - Advanced CSP techniques (Sudoku solver)
+
+### LP Examples ✅
+- **lp** / **optimized_lp** - Linear programming examples:
+  - Portfolio optimization with risk constraints
+  - Transportation problem (supply chain optimization)
+  - Constraint relaxation analysis
+  - Performance comparison across problem sizes
+
+### Supported Problem Types
+
+#### CSP Problems
 - **N-Queens**: The classic N-Queens problem, supporting chessboards of any size
-- **Graph Coloring**: Vertex coloring of arbitrary graph structures
+- **Graph Coloring**: Vertex coloring of arbitrary graph structures  
 - **Map Coloring**: Coloring geographic regions, verifying the Four Color Theorem
 - **Sudoku**: Solving standard 9×9 Sudoku puzzles
 - **Logic Puzzles**: Including classic logical reasoning problems such as the Zebra Puzzle
 - **Scheduling**: Course scheduling, meeting scheduling, resource allocation, etc.
 
-### Optimization Problems
+#### Optimization Problems
 - **Linear Programming**: Linear optimization with continuous variables
 - **Integer Programming**: Optimization with discrete variables
 - **Production Planning**: Production optimization under resource constraints
@@ -229,28 +358,39 @@ response = requests.post("http://127.0.0.1:8080/solve-graph-coloring", json={
 - **Extensible**: Supports custom constraints and objective functions
 - **Concurrency-Safe**: The HTTP API supports concurrent request processing
 
+## Performance
+
+All examples run efficiently:
+- **CSP Examples**: 0.4-0.5 seconds (N-Queens, Graph Coloring, etc.)
+- **LP Examples**: 0.8-0.9 seconds (Portfolio optimization, Transportation, etc.)
+
 ## Troubleshooting
 
 ### Common Errors
-- `"gurddy package not available"`: Need to install the gurddy package
-- `"No solution found"`: No solution found under the given constraints; try relaxing the constraints.
-- `"Invalid input types"`: Check the data types of the input parameters.
-- `"Unknown problem type"`: Use a supported problem type.
+- `"gurddy package not available"`: Install with `python -m mcp_server.server install`
+- `"No solution found"`: No solution exists under given constraints; try relaxing constraints
+- `"Invalid input types"`: Check the data types of input parameters
+- `"Unknown example"`: Use `python -m mcp_server.server run-example --help` to see available examples
 
 ### Installation Issues
 ```bash
-# If gurddy installation fails, try upgrading pip.
+# Install all dependencies
+pip install -r requirements.txt
 
-pip install --upgrade pip
-pip install gurddy
+# Or install individually
+pip install gurddy>=0.1.6 pulp>=2.6.0
 
-# If PuLP installation fails,
+# Check installation
+python -c "import gurddy, pulp; print('All dependencies installed')"
+```
 
-pip install pulp
-
-# Check the Python environment.
-
-python -c "import sys; print(sys.executable)"
+### Example Debugging
+Run examples directly for debugging:
+```bash
+python mcp_server/examples/n_queens.py
+python mcp_server/examples/graph_coloring.py
+python mcp_server/examples/logic_puzzles.py
+```
 
 ## Extension Development
 

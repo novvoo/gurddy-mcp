@@ -54,22 +54,37 @@ def run_example(example_name: str) -> Dict[str, Optional[str]]:
     Returns a dict with keys: rc (int), output (str).
     """
     examples_dir = os.path.join(ROOT, 'examples')
-    if example_name == 'lp':
-        script = os.path.join(examples_dir, '')
-    elif example_name == 'csp':
-        script = os.path.join(examples_dir, '')
-    else:
-        return {"rc": None, "output": f"unknown example {example_name}"}
-
+    
+    # Map example names to specific script files
+    example_scripts = {
+        'lp': 'optimized_lp.py',
+        'csp': 'n_queens.py',
+        'n_queens': 'n_queens.py',
+        'graph_coloring': 'graph_coloring.py',
+        'map_coloring': 'map_coloring.py',
+        'scheduling': 'scheduling.py',
+        'logic_puzzles': 'logic_puzzles.py',
+        'optimized_csp': 'optimized_csp.py',
+        'optimized_lp': 'optimized_lp.py'
+    }
+    
+    if example_name not in example_scripts:
+        available = ', '.join(example_scripts.keys())
+        return {"rc": 1, "output": f"Unknown example '{example_name}'. Available examples: {available}"}
+    
+    script = os.path.join(examples_dir, example_scripts[example_name])
+    
     if not os.path.exists(script):
-        return {"rc": None, "output": f"example script not found: {script}"}
+        return {"rc": 1, "output": f"Example script not found: {script}"}
 
     try:
         completed = subprocess.run([sys.executable, script], capture_output=True, text=True, check=False)
-        output = completed.stdout + '\n' + completed.stderr
+        output = completed.stdout
+        if completed.stderr:
+            output += '\n--- STDERR ---\n' + completed.stderr
         return {"rc": completed.returncode, "output": output}
     except Exception as e:
-        return {"rc": None, "output": str(e)}
+        return {"rc": 1, "output": f"Error running example: {str(e)}"}
 
 
 def solve_sudoku(puzzle: List[List[int]]) -> Dict[str, Any]:

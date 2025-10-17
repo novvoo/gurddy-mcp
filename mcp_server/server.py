@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
 	sub.add_parser('info')
 
 	sp_demo = sub.add_parser('run-example')
-	sp_demo.add_argument('example', choices=['lp', 'csp'])
+	sp_demo.add_argument('example', choices=['lp', 'csp', 'n_queens', 'graph_coloring', 'map_coloring', 'scheduling', 'logic_puzzles', 'optimized_csp', 'optimized_lp'])
 
 	args = p.parse_args(argv)
 

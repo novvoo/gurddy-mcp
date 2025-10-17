@@ -82,8 +82,17 @@ async def get_info():
 
 @app.post("/run-example")
 async def run_example(req: RunExampleRequest):
-    if req.example not in ("lp", "csp"):
-        raise HTTPException(status_code=400, detail="example must be 'lp' or 'csp'")
+    # Support all available examples
+    valid_examples = [
+        "lp", "csp", "n_queens", "graph_coloring", "map_coloring", 
+        "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp"
+    ]
+    
+    if req.example not in valid_examples:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"example must be one of: {', '.join(valid_examples)}"
+        )
 
     start = time.time()
     res = run_example_fn(req.example)

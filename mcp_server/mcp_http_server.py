@@ -164,6 +164,63 @@ class MCPHTTPServer:
                     },
                     "required": ["regions", "adjacencies"]
                 }
+            },
+            "solve_lp": {
+                "description": "Solve a Linear Programming (LP) or Mixed Integer Programming (MIP) problem using PuLP",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "profits": {
+                            "type": "object",
+                            "description": "Dictionary mapping product names to profit coefficients (objective function)"
+                        },
+                        "consumption": {
+                            "type": "object",
+                            "description": "Dictionary mapping product names to resource consumption (dict of resource->amount)"
+                        },
+                        "capacities": {
+                            "type": "object",
+                            "description": "Dictionary mapping resource names to capacity limits"
+                        },
+                        "integer": {
+                            "type": "boolean",
+                            "description": "Whether to use integer variables (MIP) or continuous (LP)",
+                            "default": True
+                        }
+                    },
+                    "required": ["profits", "consumption", "capacities"]
+                }
+            },
+            "solve_production_planning": {
+                "description": "Solve a production planning optimization problem with optional sensitivity analysis",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "profits": {
+                            "type": "object",
+                            "description": "Dictionary mapping product names to profit per unit"
+                        },
+                        "consumption": {
+                            "type": "object",
+                            "description": "Dictionary mapping product names to resource consumption"
+                        },
+                        "capacities": {
+                            "type": "object",
+                            "description": "Dictionary mapping resource names to available capacity"
+                        },
+                        "integer": {
+                            "type": "boolean",
+                            "description": "Whether production quantities must be integers",
+                            "default": True
+                        },
+                        "sensitivity_analysis": {
+                            "type": "boolean",
+                            "description": "Whether to perform sensitivity analysis",
+                            "default": False
+                        }
+                    },
+                    "required": ["profits", "consumption", "capacities"]
+                }
             }
         }
     
@@ -286,6 +343,31 @@ class MCPHTTPServer:
             if regions is None or adjacencies is None:
                 return {"error": "regions and adjacencies are required"}
             return solve_map_coloring(regions, adjacencies, max_colors)
+        
+        elif tool_name == "solve_lp":
+            profits = arguments.get("profits")
+            consumption = arguments.get("consumption")
+            capacities = arguments.get("capacities")
+            integer = arguments.get("integer", True)
+            if profits is None or consumption is None or capacities is None:
+                return {"error": "profits, consumption, and capacities are required"}
+            problem = {
+                "profits": profits,
+                "consumption": consumption,
+                "capacities": capacities,
+                "integer": integer
+            }
+            return solve_lp(problem)
+        
+        elif tool_name == "solve_production_planning":
+            profits = arguments.get("profits")
+            consumption = arguments.get("consumption")
+            capacities = arguments.get("capacities")
+            integer = arguments.get("integer", True)
+            sensitivity_analysis = arguments.get("sensitivity_analysis", False)
+            if profits is None or consumption is None or capacities is None:
+                return {"error": "profits, consumption, and capacities are required"}
+            return solve_production_planning(profits, consumption, capacities, integer, sensitivity_analysis)
         
         else:
             return {"error": f"Unknown tool: {tool_name}"}

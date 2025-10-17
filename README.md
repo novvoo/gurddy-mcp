@@ -67,9 +67,91 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | gurddy-mcp
 
 ### 1. MCP Stdio Server (Primary Interface)
 
-The main `gurddy-mcp` command is an MCP stdio server that can be integrated with tools like Kiro:
+The main `gurddy-mcp` command is an MCP stdio server that can be integrated with tools like Kiro.
+
+#### Option A: Using uvx (Recommended - Always Latest Version)
+
+Using `uvx` ensures you always run the latest published version without manual installation.
 
 Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
+
+**Recommended: Explicit latest version**
+```json
+{
+  "mcpServers": {
+    "gurddy": {
+      "command": "uvx",
+      "args": ["gurddy-mcp@latest"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "run_example",
+        "info",
+        "install",
+        "solve_n_queens",
+        "solve_sudoku",
+        "solve_graph_coloring",
+        "solve_map_coloring",
+        "solve_lp",
+        "solve_production_planning"
+      ]
+    }
+  }
+}
+```
+
+**Alternative: Without version specifier (also uses latest)**
+```json
+{
+  "mcpServers": {
+    "gurddy": {
+      "command": "uvx",
+      "args": ["gurddy-mcp"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning"]
+    }
+  }
+}
+```
+
+**Pin to specific version (if needed)**
+```json
+{
+  "mcpServers": {
+    "gurddy": {
+      "command": "uvx",
+      "args": ["gurddy-mcp==0.1.3"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning"]
+    }
+  }
+}
+```
+
+**Why use uvx?**
+- ✅ Always runs the latest published version automatically
+- ✅ No manual installation or upgrade needed
+- ✅ Isolated environment per execution
+- ✅ No dependency conflicts with your system Python
+
+**Prerequisites:** Install `uv` first:
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or using pip
+pip install uv
+
+# Or using Homebrew (macOS)
+brew install uv
+```
+
+#### Option B: Using Direct Command (After Installation)
+
+If you've already installed `gurddy-mcp` via pip:
+
 ```json
 {
   "mcpServers": {
@@ -85,7 +167,9 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
         "solve_n_queens",
         "solve_sudoku",
         "solve_graph_coloring",
-        "solve_map_coloring"
+        "solve_map_coloring",
+        "solve_lp",
+        "solve_production_planning"
       ]
     }
   }
@@ -100,6 +184,8 @@ Available MCP tools:
 - `solve_sudoku` - Solve Sudoku puzzles
 - `solve_graph_coloring` - Solve graph coloring problems
 - `solve_map_coloring` - Solve map coloring problems
+- `solve_lp` - Solve Linear Programming (LP) or Mixed Integer Programming (MIP) problems
+- `solve_production_planning` - Solve production planning optimization problems
 
 Test the MCP server:
 ```bash
@@ -231,6 +317,53 @@ Solve map coloring problem.
     "regions": ["A", "B", "C"],
     "adjacencies": [["A", "B"], ["B", "C"]],
     "max_colors": 2
+  }
+}
+```
+
+### solve_lp
+Solve a Linear Programming (LP) or Mixed Integer Programming (MIP) problem using PuLP.
+```json
+{
+  "name": "solve_lp",
+  "arguments": {
+    "profits": {
+      "ProductA": 30,
+      "ProductB": 40
+    },
+    "consumption": {
+      "ProductA": {"Labor": 2, "Material": 3},
+      "ProductB": {"Labor": 3, "Material": 2}
+    },
+    "capacities": {
+      "Labor": 100,
+      "Material": 120
+    },
+    "integer": true
+  }
+}
+```
+
+### solve_production_planning
+Solve a production planning optimization problem with optional sensitivity analysis.
+```json
+{
+  "name": "solve_production_planning",
+  "arguments": {
+    "profits": {
+      "ProductA": 30,
+      "ProductB": 40
+    },
+    "consumption": {
+      "ProductA": {"Labor": 2, "Material": 3},
+      "ProductB": {"Labor": 3, "Material": 2}
+    },
+    "capacities": {
+      "Labor": 100,
+      "Material": 120
+    },
+    "integer": true,
+    "sensitivity_analysis": false
   }
 }
 ```

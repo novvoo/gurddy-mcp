@@ -4,10 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gurddy_mcp"
-version = "0.1.0"
+version = "0.1.2"
 description = "MCP (Model Context Protocol) server for Gurddy optimization library - CSP and LP problem solving"
 readme = "README.md"
-license = "MIT"
 authors = [
     {name = "Gurddy MCP Team", email = "contact@example.com"}
 ]
@@ -22,7 +21,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -67,7 +66,7 @@ Documentation = "https://github.com/novvoo/gurddy-mcp#readme"
 "Live Demo" = "https://gurddy-mcp.fly.dev"
 
 [project.scripts]
-gurddy-mcp = "mcp_server.server:main"
+gurddy-mcp = "mcp_server.mcp_stdio_server:main"
 
 [tool.setuptools.packages.find]
 include = ["mcp_server*"]

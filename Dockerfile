@@ -14,8 +14,11 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy package
 COPY . /app
 
-# Expose port
+# Install the package
+RUN pip install --no-cache-dir -e .
+
+# Expose port for MCP HTTP server
 EXPOSE 8080
 
-# Default command: run uvicorn
-CMD ["python", "-m", "uvicorn", "mcp_server.http_api:app", "--host", "0.0.0.0", "--port", "8080"]
+# Default command: run MCP HTTP server
+CMD ["python", "-m", "uvicorn", "mcp_server.mcp_http_server:app", "--host", "0.0.0.0", "--port", "8080"]

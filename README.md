@@ -5,11 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-gurddy--mcp.fly.dev-blue)](https://gurddy-mcp.fly.dev)
 
-A fully functional MCP (Model Context Protocol) server providing solutions for Constraint Satisfaction Problems (CSP) and Linear Programming (LP). Built on the `gurddy` optimization library, it supports solving a variety of classic problems through multiple interfaces.
+A Model Context Protocol (MCP) server providing solutions for Constraint Satisfaction Problems (CSP) and Linear Programming (LP). Built on the `gurddy` optimization library, it supports solving a variety of classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
 
-**🚀 Quick Start:** `pip install gurddy_mcp && gurddy-mcp run-example n_queens`
+**🚀 Quick Start (Stdio):** `pip install gurddy_mcp` then configure in your IDE
 
-**🌐 Live Demo:** [https://gurddy-mcp.fly.dev](https://gurddy-mcp.fly.dev)
+**🌐 Quick Start (HTTP):** `docker run -p 8080:8080 gurddy-mcp` or see deployment guide
 
 **📦 PyPI Package:** [https://pypi.org/project/gurddy_mcp](https://pypi.org/project/gurddy_mcp)
 
@@ -27,10 +27,11 @@ A fully functional MCP (Model Context Protocol) server providing solutions for C
 - **Production Planning**: Solve production optimization problems under resource constraints
 - **Integer Programming**: Supports optimization problems with integer variables
 
-### HTTP API Service
-- RESTful API interface, supporting JSON requests and responses
-- Comprehensive error handling and performance monitoring
-- Supports online solving of various CSP and LP problems
+### MCP Protocol Support
+- **Stdio Transport**: For local IDE integration (Kiro, Claude Desktop, etc.)
+- **HTTP/SSE Transport**: For web-based clients and remote access
+- Unified tool interface across both transports
+- Full JSON-RPC 2.0 compliance
 
 ## Installation
 
@@ -58,153 +59,212 @@ pip install -r requirements.txt
 
 ### Verify Installation
 ```bash
-# Check if installation was successful
-gurddy-mcp info
-
-# Run a quick example
-gurddy-mcp run-example n_queens
+# Test MCP stdio server
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | gurddy-mcp
 ```
 
 ## Usage
 
-### 1. Command Line Interface
+### 1. MCP Stdio Server (Primary Interface)
 
-Run examples directly:
-```bash
-# Using the installed command (after pip install gurddy_mcp)
-gurddy-mcp run-example n_queens
-gurddy-mcp run-example graph_coloring
-gurddy-mcp run-example map_coloring
-gurddy-mcp run-example scheduling
-gurddy-mcp run-example logic_puzzles
-gurddy-mcp run-example optimized_csp
-gurddy-mcp run-example lp
-gurddy-mcp run-example optimized_lp
+The main `gurddy-mcp` command is an MCP stdio server that can be integrated with tools like Kiro:
 
-# Get package information
-gurddy-mcp info
-
-# Install or upgrade gurddy
-gurddy-mcp install [--upgrade]
-
-# Alternative: using Python module (from source)
-python -m mcp_server.server run-example n_queens
-python -m mcp_server.server info
-```
-
-### 2. HTTP API Service
-
-Start the HTTP server:
-```bash
-# After installing gurddy_mcp
-uvicorn mcp_server.http_api:app --host 127.0.0.1 --port 8080
-
-# Or use the live demo
-# https://gurddy-mcp.fly.dev
-```
-
-Access the API documentation: http://127.0.0.1:8080/docs
-
-### 3. MCP (Model Context Protocol) Integration
-
-Configure in `.kiro/settings/mcp.json`:
+Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "gurddy-mcp": {
+    "gurddy": {
       "command": "gurddy-mcp",
+      "args": [],
+      "env": {},
       "disabled": false,
-      "autoApprove": ["run_example", "info", "install"]
+      "autoApprove": [
+        "run_example",
+        "info",
+        "install",
+        "solve_n_queens",
+        "solve_sudoku",
+        "solve_graph_coloring",
+        "solve_map_coloring"
+      ]
     }
   }
 }
 ```
 
-Alternative configuration (from source):
+Available MCP tools:
+- `info` - Get gurddy package information
+- `install` - Install or upgrade the gurddy package
+- `run_example` - Run example programs (n_queens, graph_coloring, etc.)
+- `solve_n_queens` - Solve N-Queens problem
+- `solve_sudoku` - Solve Sudoku puzzles
+- `solve_graph_coloring` - Solve graph coloring problems
+- `solve_map_coloring` - Solve map coloring problems
+
+Test the MCP server:
+```bash
+# Test initialization
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | gurddy-mcp
+
+# Test listing tools
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | gurddy-mcp
+```
+
+### 2. MCP HTTP Server
+
+Start the HTTP MCP server (MCP protocol over HTTP/SSE):
+
+**Local Development:**
+```bash
+uvicorn mcp_server.mcp_http_server:app --host 127.0.0.1 --port 8080
+```
+
+**Docker:**
+```bash
+# Build the image
+docker build -t gurddy-mcp .
+
+# Run the container
+docker run -p 8080:8080 gurddy-mcp
+```
+
+**Access the server:**
+- Root: http://127.0.0.1:8080/
+- Health check: http://127.0.0.1:8080/health
+- SSE endpoint: http://127.0.0.1:8080/sse
+- Message endpoint: http://127.0.0.1:8080/message (POST)
+
+**Test the HTTP MCP server:**
+```bash
+# List available tools
+curl -X POST http://127.0.0.1:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# Call a tool
+curl -X POST http://127.0.0.1:8080/message \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"info","arguments":{}}}'
+```
+
+**Python Client Example:**
+See `examples/http_mcp_client.py` for a complete example of how to interact with the HTTP MCP server.
+
+## MCP Tools
+
+The server provides the following MCP tools:
+
+### info
+Get information about the gurddy package.
 ```json
 {
-  "mcpServers": {
-    "gurddy-mcp": {
-      "command": "python",
-      "args": ["-m", "mcp_server.server"],
-      "cwd": "/path/to/gurddy-mcp",
-      "env": {
-        "PYTHONPATH": "."
-      },
-      "disabled": false,
-      "autoApprove": ["run_example", "info", "install"]
-    }
+  "name": "info",
+  "arguments": {}
+}
+```
+
+### install
+Install or upgrade the gurddy package.
+```json
+{
+  "name": "install",
+  "arguments": {
+    "package": "gurddy",
+    "upgrade": false
   }
 }
 ```
 
-## Integration in Other Projects
+### run_example
+Run a gurddy example.
+```json
+{
+  "name": "run_example",
+  "arguments": {
+    "example": "n_queens"
+  }
+}
+```
+Available examples: `lp`, `csp`, `n_queens`, `graph_coloring`, `map_coloring`, `scheduling`, `logic_puzzles`, `optimized_csp`, `optimized_lp`
 
-### HTTP API Client
-```python
-import requests
-
-# Use the deployed service
-BASE_URL = "https://gurddy-mcp.fly.dev"
-
-# Run examples
-response = requests.post(f"{BASE_URL}/run-example", json={"example": "n_queens"})
-print(response.json())
-
-# Solve specific problems
-response = requests.post(f"{BASE_URL}/solve-n-queens", json={"n": 8})
-result = response.json()
-if result["success"]:
-    print(f"8-Queens solution: {result['solution']}")
+### solve_n_queens
+Solve the N-Queens problem.
+```json
+{
+  "name": "solve_n_queens",
+  "arguments": {
+    "n": 8
+  }
+}
 ```
 
-### Direct Module Import
-```python
-# Install from PyPI
-pip install gurddy_mcp
-
-# Use in your project
-from mcp_server import solve_n_queens, solve_graph_coloring
-
-result = solve_n_queens(8)
-if result['success']:
-    print(f"Solution: {result['solution']}")
-
-# Or import from specific modules
-from mcp_server.handlers.gurddy import solve_n_queens, solve_sudoku
+### solve_sudoku
+Solve a 9x9 Sudoku puzzle.
+```json
+{
+  "name": "solve_sudoku",
+  "arguments": {
+    "puzzle": [[5,3,0,...], [6,0,0,...], ...]
+  }
+}
 ```
 
-### Docker Integration
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-RUN pip install gurddy_mcp
-EXPOSE 8080
-CMD ["uvicorn", "mcp_server.http_api:app", "--host", "0.0.0.0", "--port", "8080"]
+### solve_graph_coloring
+Solve graph coloring problem.
+```json
+{
+  "name": "solve_graph_coloring",
+  "arguments": {
+    "edges": [[0,1], [1,2], [2,0]],
+    "num_vertices": 3,
+    "max_colors": 3
+  }
+}
 ```
 
+### solve_map_coloring
+Solve map coloring problem.
+```json
+{
+  "name": "solve_map_coloring",
+  "arguments": {
+    "regions": ["A", "B", "C"],
+    "adjacencies": [["A", "B"], ["B", "C"]],
+    "max_colors": 2
+  }
+}
+```
+
+## Docker Deployment
+
+### Build and Run
+```bash
+# Build the image
+docker build -t gurddy-mcp .
+
+# Run the container
+docker run -p 8080:8080 gurddy-mcp
+
+# Or with environment variables
+docker run -p 8080:8080 -e PORT=8080 gurddy-mcp
+```
+
+### Docker Compose
 ```yaml
-# docker-compose.yml
 version: '3.8'
 services:
   gurddy-mcp:
-    image: python:3.11-slim
-    command: >
-      sh -c "pip install gurddy_mcp && 
-             uvicorn mcp_server.http_api:app --host 0.0.0.0 --port 8080"
+    build: .
     ports:
       - "8080:8080"
-  your-app:
-    build: .
     environment:
-      - GURDDY_API_URL=http://gurddy-mcp:8080
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
 ```
 
-## API endpoint
+## Example Output
 
-### CSP problem solution
-
-#### N-Queens problem
+### N-Queens Problem
 ```bash
 POST /solve-n-queens
 {
@@ -212,99 +272,44 @@ POST /solve-n-queens
 }
 ```
 
-#### Graph coloring problem
-```bash
-POST /solve-graph-coloring
-{
-"edges": [[0,1], [1,2], [2,0]],
-"num_vertices": 3,
-"max_colors": 3
-}
-```
 
-#### Map coloring problem
-```bash
-POST /solve-map-coloring
-{
-"regions": ["A", "B", "C"],
-"adjacencies": [["A", "B"], ["B", "C"]],
-"max_colors": 2
-}
-```
-
-#### Sudoku Solver
-```bash
-POST /solve-sudoku
-{
-"puzzle": [[5,3,0,...], [6,0,0,...], ...]
-}
-```
-
-#### General CSP Solver
-```bash
-POST /solve-csp
-{
-"problem_type": "n_queens",
-"parameters": {"n": 4}
-}
-```
-
-### LP/Optimization Problems
-
-#### Linear Programming
-```bash
-POST /solve-lp
-{
-"problem": {
-"profits": {"ProductA": 10, "ProductB": 15},
-"consumption": {
-"ProductA": {"Resource1": 2, "Resource2": 1},
-"ProductB": {"Resource1": 1, "Resource2": 3}
-},
-"capacities": {"Resource1": 100, "Resource2": 80}
-}
-}
-```
-
-#### Production Planning
-```bash
-POST /solve-production-planning
-{
-"profits": {"ProductA": 10, "ProductB": 15},
-"consumption": {...},
-"capacities": {...},
-"integer": true,
-"sensitivity_analysis": false
-}
-```
 
 ## Project Structure
 
 ```
 mcp_server/
 ├── handlers/
-│ └── gurddy.py # Core solver implementation
-├── tools/ # MCP tool wrapper
-├── examples/ # Rich CSP Problem Examples
-│ ├── n_queens.py # N-Queens Problem
-│ ├── graph_coloring.py # Graph Coloring Problem
-│ ├── map_coloring.py # Map Coloring Problem
-│ ├── logic_puzzles.py # Logic Puzzles
-│ └── scheduling.py # Scheduling Problem
-├── http_api.py # HTTP API Server
-└── server.py # MCP Server
+│   └── gurddy.py           # Core solver implementation
+├── tools/                  # MCP tool wrappers
+├── examples/               # Rich CSP Problem Examples
+│   ├── n_queens.py         # N-Queens Problem
+│   ├── graph_coloring.py   # Graph Coloring Problem
+│   ├── map_coloring.py     # Map Coloring Problem
+│   ├── logic_puzzles.py    # Logic Puzzles
+│   └── scheduling.py       # Scheduling Problem
+├── mcp_stdio_server.py     # MCP Stdio Server (for IDE integration)
+└── mcp_http_server.py      # MCP HTTP Server (for web clients)
 
-# Test and Demo Files
-demo_csp_examples.py # Full Functionality Demonstration
-test_api_direct.py # Direct API Test
-test_csp_api.py # HTTP API Test
-CSP_API_GUIDE.md # API Usage Guide
+examples/
+└── http_mcp_client.py      # Example HTTP MCP client
+
+Dockerfile                  # Docker configuration for HTTP server
+```
+
+## MCP Transports
+
+| Transport | Command | Protocol | Use Case |
+|-----------|---------|----------|----------|
+| **Stdio** | `gurddy-mcp` | MCP over stdin/stdout | IDE integration (Kiro, Claude Desktop, etc.) |
+| **HTTP** | `uvicorn mcp_server.mcp_http_server:app` | MCP over HTTP/SSE | Web clients, remote access, Docker deployment |
+
+Both transports implement the same MCP protocol and provide identical tools.
 
 ## Example Output
 
 ### N-Queens Problem
 ```bash
-$ python -m mcp_server.server run-example n_queens
+$ gurddy-mcp-cli run-example n_queens
 
 Solving 8-Queens problem...
 

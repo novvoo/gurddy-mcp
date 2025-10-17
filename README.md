@@ -88,6 +88,7 @@ Configure in `.kiro/settings/mcp.json`:
     "gurddy-mcp": {
       "command": "python",
       "args": ["-m", "mcp_server.server"],
+      "cwd": "/path/to/gurddy-mcp",
       "env": {
         "PYTHONPATH": "."
       },

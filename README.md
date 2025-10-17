@@ -39,10 +39,10 @@ pip install fastapi uvicorn gurddy pulp requests
 
 Start the HTTP server:
 ```bash
-uvicorn mcp_server.http_api:app --host 127.0.0.1 --port 8000
+uvicorn mcp_server.http_api:app --host 127.0.0.1 --port 8080
 ```
 
-Access the API documentation: http://127.0.0.1:8000/docs
+Access the API documentation: http://127.0.0.1:8080/docs
 
 ### 2. Directly Calling the Demo
 
@@ -176,7 +176,7 @@ CSP_API_GUIDE.md # API Usage Guide
 ```python
 import requests
 
-response = requests.post("http://127.0.0.1:8000/solve-map-coloring", json={ 
+response = requests.post("http://127.0.0.1:8080/solve-map-coloring", json={ 
 "regions": ['WA', 'NT', 'SA', 'QLD', 'NSW', 'VIC', 'TAS'], 
 "adjacencies": [ 
 ['WA', 'NT'], ['WA', 'SA'], ['NT', 'SA'], ['NT', 'QLD'], 
@@ -189,13 +189,13 @@ response = requests.post("http://127.0.0.1:8000/solve-map-coloring", json={
 
 #### 8 Queen Problem
 ```python
-response= requests.post("http://127.0.0.1:8000/solve-n-queens",
+response= requests.post("http://127.0.0.1:8080/solve-n-queens",
 json={"n": 8})
 ```
 
 #### Petersen Graph Coloring
 ```python
-response = requests.post("http://127.0.0.1:8000/solve-graph-coloring", json={
+response = requests.post("http://127.0.0.1:8080/solve-graph-coloring", json={
 "edges": [
 [0,1], [1,2], [2,3], [3,4], [4,0], # Outer loop
 [5,6], [6,7], [7,8], [8,9], [9,5], # Inner loop

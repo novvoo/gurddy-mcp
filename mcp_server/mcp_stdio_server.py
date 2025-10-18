@@ -22,6 +22,8 @@ from mcp_server.handlers.gurddy import (
     solve_graph_coloring,
     solve_map_coloring,
     solve_production_planning,
+    solve_minimax_game,
+    solve_minimax_decision,
 )
 
 
@@ -58,14 +60,14 @@ class MCPStdioServer:
                 }
             },
             "run_example": {
-                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp)",
+                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp, minimax)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "example": {
                             "type": "string",
                             "description": "Example name to run",
-                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp"]
+                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax"]
                         }
                     },
                     "required": ["example"]
@@ -201,6 +203,59 @@ class MCPStdioServer:
                         }
                     },
                     "required": ["profits", "consumption", "capacities"]
+                }
+            },
+            "solve_minimax_game": {
+                "description": "Solve a two-player zero-sum game using minimax (game theory)",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "payoff_matrix": {
+                            "type": "array",
+                            "description": "2D array representing payoffs from row player's perspective",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"}
+                            }
+                        },
+                        "player": {
+                            "type": "string",
+                            "description": "Which player's strategy to solve for: 'row' (maximizer) or 'col' (minimizer)",
+                            "enum": ["row", "col"],
+                            "default": "row"
+                        }
+                    },
+                    "required": ["payoff_matrix"]
+                }
+            },
+            "solve_minimax_decision": {
+                "description": "Solve a minimax decision problem under uncertainty (robust optimization)",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "scenarios": {
+                            "type": "array",
+                            "description": "List of scenarios, each mapping decision variables to loss/gain coefficients",
+                            "items": {"type": "object"}
+                        },
+                        "decision_vars": {
+                            "type": "array",
+                            "description": "List of decision variable names",
+                            "items": {"type": "string"}
+                        },
+                        "budget": {
+                            "type": "number",
+                            "description": "Total budget constraint",
+                            "default": 100.0
+                        },
+                        "objective": {
+                            "type": "string",
+                            "description": "Optimization objective",
+                            "enum": ["minimize_max_loss", "maximize_min_gain"],
+                            "default": "minimize_max_loss"
+                        }
+                    },
+                    "required": ["scenarios", "decision_vars"]
                 }
             }
         }
@@ -349,6 +404,22 @@ class MCPStdioServer:
             if profits is None or consumption is None or capacities is None:
                 return {"error": "profits, consumption, and capacities are required"}
             return solve_production_planning(profits, consumption, capacities, integer, sensitivity_analysis)
+        
+        elif tool_name == "solve_minimax_game":
+            payoff_matrix = arguments.get("payoff_matrix")
+            player = arguments.get("player", "row")
+            if payoff_matrix is None:
+                return {"error": "payoff_matrix is required"}
+            return solve_minimax_game(payoff_matrix, player)
+        
+        elif tool_name == "solve_minimax_decision":
+            scenarios = arguments.get("scenarios")
+            decision_vars = arguments.get("decision_vars")
+            budget = arguments.get("budget", 100.0)
+            objective = arguments.get("objective", "minimize_max_loss")
+            if scenarios is None or decision_vars is None:
+                return {"error": "scenarios and decision_vars are required"}
+            return solve_minimax_decision(scenarios, decision_vars, budget, objective)
         
         else:
             return {"error": f"Unknown tool: {tool_name}"}

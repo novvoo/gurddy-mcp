@@ -65,7 +65,8 @@ def run_example(example_name: str) -> Dict[str, Optional[str]]:
         'scheduling': 'scheduling.py',
         'logic_puzzles': 'logic_puzzles.py',
         'optimized_csp': 'optimized_csp.py',
-        'optimized_lp': 'optimized_lp.py'
+        'optimized_lp': 'optimized_lp.py',
+        'minimax': 'minimax.py'
     }
     
     if example_name not in example_scripts:
@@ -398,4 +399,91 @@ def solve_production_planning(profits: Dict[str, float], consumption: Dict[str, 
         }
     
     return result
+
+
+def solve_minimax_game(payoff_matrix: List[List[float]], player: str = "row") -> Dict[str, Any]:
+    """Solve a two-player zero-sum game using minimax.
+    
+    Args:
+        payoff_matrix: 2D list representing payoffs (row player's perspective)
+        player: "row" for maximizer or "col" for minimizer
+        
+    Returns:
+        Dict with success, strategy (list of probabilities), value (game value), and error
+    """
+    if gurddy is None:
+        return {"success": False, "strategy": None, "value": None, "error": "gurddy package not available"}
+    
+    if not isinstance(payoff_matrix, list) or len(payoff_matrix) == 0:
+        return {"success": False, "strategy": None, "value": None, "error": "payoff_matrix must be a non-empty 2D list"}
+    
+    if not isinstance(player, str) or player not in ["row", "col"]:
+        return {"success": False, "strategy": None, "value": None, "error": "player must be 'row' or 'col'"}
+    
+    try:
+        from gurddy.solver.minimax_solver import MinimaxSolver
+        
+        solver = MinimaxSolver(None)
+        result = solver.solve_game_matrix(payoff_matrix, player=player)
+        
+        return {
+            "success": True,
+            "strategy": result["strategy"],
+            "value": result["value"],
+            "error": None
+        }
+    except Exception as e:
+        return {"success": False, "strategy": None, "value": None, "error": str(e)}
+
+
+def solve_minimax_decision(scenarios: List[Dict[str, float]], decision_vars: List[str], 
+                          budget: float = 100.0, objective: str = "minimize_max_loss") -> Dict[str, Any]:
+    """Solve a minimax decision problem under uncertainty.
+    
+    Args:
+        scenarios: List of dicts mapping decision variables to coefficients (loss/gain)
+        decision_vars: List of decision variable names
+        budget: Total budget constraint
+        objective: "minimize_max_loss" or "maximize_min_gain"
+        
+    Returns:
+        Dict with success, decision (dict of allocations), objective_value, and error
+    """
+    if gurddy is None:
+        return {"success": False, "decision": None, "objective_value": None, "error": "gurddy package not available"}
+    
+    if not isinstance(scenarios, list) or len(scenarios) == 0:
+        return {"success": False, "decision": None, "objective_value": None, "error": "scenarios must be a non-empty list"}
+    
+    if not isinstance(decision_vars, list) or len(decision_vars) == 0:
+        return {"success": False, "decision": None, "objective_value": None, "error": "decision_vars must be a non-empty list"}
+    
+    try:
+        from gurddy.solver.minimax_solver import MinimaxSolver
+        
+        solver = MinimaxSolver(None)
+        
+        if objective == "minimize_max_loss":
+            result = solver.solve_minimax_decision(scenarios, decision_vars, budget=budget)
+            return {
+                "success": True,
+                "decision": result["decision"],
+                "objective_value": result["max_loss"],
+                "objective_type": "max_loss",
+                "error": None
+            }
+        elif objective == "maximize_min_gain":
+            result = solver.solve_maximin_decision(scenarios, decision_vars, budget=budget)
+            return {
+                "success": True,
+                "decision": result["decision"],
+                "objective_value": result["min_gain"],
+                "objective_type": "min_gain",
+                "error": None
+            }
+        else:
+            return {"success": False, "decision": None, "objective_value": None, 
+                   "error": f"Unknown objective: {objective}. Use 'minimize_max_loss' or 'maximize_min_gain'"}
+    except Exception as e:
+        return {"success": False, "decision": None, "objective_value": None, "error": str(e)}
 

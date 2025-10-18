@@ -27,6 +27,12 @@ A Model Context Protocol (MCP) server providing solutions for Constraint Satisfa
 - **Production Planning**: Solve production optimization problems under resource constraints
 - **Integer Programming**: Supports optimization problems with integer variables
 
+### Minimax/Game Theory Problems
+- **Zero-Sum Games**: Solve two-player zero-sum games (Rock-Paper-Scissors, Matching Pennies, etc.)
+- **Robust Optimization**: Minimize worst-case loss or maximize worst-case gain under uncertainty
+- **Security Games**: Optimal resource allocation in adversarial scenarios
+- **Portfolio Optimization**: Robust portfolio allocation minimizing maximum loss
+
 ### MCP Protocol Support
 - **Stdio Transport**: For local IDE integration (Kiro, Claude Desktop, etc.)
 - **HTTP/SSE Transport**: For web-based clients and remote access
@@ -109,7 +115,7 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
       "args": ["gurddy-mcp"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning"]
+      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"]
     }
   }
 }
@@ -124,7 +130,7 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
       "args": ["gurddy-mcp==0.1.3"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning"]
+      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"]
     }
   }
 }
@@ -169,7 +175,9 @@ If you've already installed `gurddy-mcp` via pip:
         "solve_graph_coloring",
         "solve_map_coloring",
         "solve_lp",
-        "solve_production_planning"
+        "solve_production_planning",
+        "solve_minimax_game",
+        "solve_minimax_decision"
       ]
     }
   }
@@ -179,13 +187,15 @@ If you've already installed `gurddy-mcp` via pip:
 Available MCP tools:
 - `info` - Get gurddy package information
 - `install` - Install or upgrade the gurddy package
-- `run_example` - Run example programs (n_queens, graph_coloring, etc.)
+- `run_example` - Run example programs (n_queens, graph_coloring, minimax, etc.)
 - `solve_n_queens` - Solve N-Queens problem
 - `solve_sudoku` - Solve Sudoku puzzles
 - `solve_graph_coloring` - Solve graph coloring problems
 - `solve_map_coloring` - Solve map coloring problems
 - `solve_lp` - Solve Linear Programming (LP) or Mixed Integer Programming (MIP) problems
 - `solve_production_planning` - Solve production planning optimization problems
+- `solve_minimax_game` - Solve two-player zero-sum games using minimax
+- `solve_minimax_decision` - Solve minimax decision problems under uncertainty
 
 Test the MCP server:
 ```bash
@@ -271,7 +281,7 @@ Run a gurddy example.
   }
 }
 ```
-Available examples: `lp`, `csp`, `n_queens`, `graph_coloring`, `map_coloring`, `scheduling`, `logic_puzzles`, `optimized_csp`, `optimized_lp`
+Available examples: `lp`, `csp`, `n_queens`, `graph_coloring`, `map_coloring`, `scheduling`, `logic_puzzles`, `optimized_csp`, `optimized_lp`, `minimax`
 
 ### solve_n_queens
 Solve the N-Queens problem.
@@ -367,6 +377,42 @@ Solve a production planning optimization problem with optional sensitivity analy
   }
 }
 ```
+
+### solve_minimax_game
+Solve a two-player zero-sum game using minimax (game theory).
+```json
+{
+  "name": "solve_minimax_game",
+  "arguments": {
+    "payoff_matrix": [
+      [0, -1, 1],
+      [1, 0, -1],
+      [-1, 1, 0]
+    ],
+    "player": "row"
+  }
+}
+```
+Returns the optimal mixed strategy and game value for the specified player.
+
+### solve_minimax_decision
+Solve a minimax decision problem under uncertainty (robust optimization).
+```json
+{
+  "name": "solve_minimax_decision",
+  "arguments": {
+    "scenarios": [
+      {"A": -0.2, "B": -0.1, "C": 0.05},
+      {"A": 0.3, "B": 0.2, "C": -0.02},
+      {"A": 0.05, "B": 0.03, "C": -0.01}
+    ],
+    "decision_vars": ["A", "B", "C"],
+    "budget": 100.0,
+    "objective": "minimize_max_loss"
+  }
+}
+```
+Objectives: `minimize_max_loss` (robust portfolio) or `maximize_min_gain` (conservative production)
 
 ## Docker Deployment
 
@@ -527,6 +573,16 @@ All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_
   - Constraint relaxation analysis
   - Performance comparison across problem sizes
 
+### Minimax Examples ✅
+- **minimax** - Minimax optimization and game theory:
+  - Rock-Paper-Scissors (zero-sum game)
+  - Matching Pennies (coordination game)
+  - Battle of the Sexes (mixed strategy equilibrium)
+  - Robust portfolio optimization (minimize maximum loss)
+  - Production planning (maximize minimum profit)
+  - Security resource allocation (defender-attacker game)
+  - Advertising competition (market share game)
+
 ### Supported Problem Types
 
 #### CSP Problems
@@ -542,6 +598,8 @@ All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_
 - **Integer Programming**: Optimization with discrete variables
 - **Production Planning**: Production optimization under resource constraints
 - **Mixed Integer Programming**: Optimization with a mix of continuous and discrete variables
+- **Minimax Optimization**: Robust optimization under uncertainty (minimize worst-case loss)
+- **Game Theory**: Two-player zero-sum games, mixed strategy Nash equilibria
 
 ## Performance Features
 
@@ -593,7 +651,7 @@ python mcp_server/examples/logic_puzzles.py
 ### Adding a New CSP Problem
 1. In `mcp_server/examples/` Create a problem implementation in `mcp_server/handlers/gurddy.py`
 2. Add the solver function in `mcp_server/handlers/gurddy.py`
-3. Add the API endpoint in `mcp_server/http_api.py`
+3. Add the API endpoint in `mcp_server/mcp_http_server.py`
 
 ### Custom Constraints
 ```python

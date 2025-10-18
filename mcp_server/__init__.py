@@ -25,7 +25,7 @@ Usage:
     python -m mcp_server.server run-example n_queens
 
     # HTTP API server
-    uvicorn mcp_server.http_api:app --host 0.0.0.0 --port 8080
+    uvicorn mcp_server.mcp_http_server:app --host 0.0.0.0 --port 8080
 
     # Direct import
     from mcp_server.handlers.gurddy import solve_n_queens
@@ -45,6 +45,8 @@ from mcp_server.handlers.gurddy import (
     solve_lp,
     solve_csp_generic,
     solve_production_planning,
+    solve_minimax_game,
+    solve_minimax_decision,
     info,
     run_example,
 )
@@ -57,6 +59,8 @@ __all__ = [
     "solve_lp",
     "solve_csp_generic",
     "solve_production_planning",
+    "solve_minimax_game",
+    "solve_minimax_decision",
     "info",
     "run_example",
 ]

@@ -7,15 +7,11 @@ WORKDIR /app
 # Avoid buffering
 ENV PYTHONUNBUFFERED=1
 
-# Copy requirements first and install to leverage Docker cache
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Copy package
-COPY . /app
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install the package
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir --upgrade gurddy-mcp
 
 # Expose port for MCP HTTP server
 EXPOSE 8080

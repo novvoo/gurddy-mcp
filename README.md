@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-gurddy--mcp.fly.dev-blue)](https://gurddy-mcp.fly.dev)
 
-A Model Context Protocol (MCP) server providing solutions for Constraint Satisfaction Problems (CSP) and Linear Programming (LP). Built on the `gurddy` optimization library, it supports solving a variety of classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
+A comprehensive Model Context Protocol (MCP) server for solving Constraint Satisfaction Problems (CSP), Linear Programming (LP), and Minimax optimization problems. Built on the `gurddy` optimization library, it supports solving various classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
 
 **🚀 Quick Start (Stdio):** `pip install gurddy_mcp` then configure in your IDE
 
@@ -15,29 +15,38 @@ A Model Context Protocol (MCP) server providing solutions for Constraint Satisfa
 
 ## Main Features
 
-### CSP Problem Solving
-- **N-Queens Problem**: Place N queens on an N×N chessboard so that they do not attack each other
-- **Graph Coloring Problem**: Assign colors to graph vertices so that adjacent vertices have different colors
-- **Map Coloring Problem**: Assign colors to map regions so that adjacent regions have different colors
-- **Sudoku Solving**: Solve 9×9 Sudoku puzzles
-- **General CSP Solver**: Supports custom constraint satisfaction problems
+### 🎯 CSP Problem Solving
+- **N-Queens Problem**: Place N queens on an N×N chessboard with no attacks
+- **Graph Coloring**: Assign colors to vertices so adjacent vertices differ
+- **Map Coloring**: Color geographic regions with adjacent regions differing
+- **Sudoku Solver**: Solve standard 9×9 Sudoku puzzles
+- **Logic Puzzles**: Einstein's Zebra puzzle and custom logic problems
+- **Scheduling**: Course scheduling, meeting scheduling, resource allocation
+- **General CSP Solver**: Support for custom constraint satisfaction problems
 
-### LP/Optimization Problems
-- **Linear Programming**: Solve optimization problems with linear objective functions and constraints
-- **Production Planning**: Solve production optimization problems under resource constraints
-- **Integer Programming**: Supports optimization problems with integer variables
+### 📊 LP/Optimization Problems
+- **Linear Programming**: Continuous variable optimization with linear constraints
+- **Mixed Integer Programming**: Optimization with integer and continuous variables
+- **Production Planning**: Resource-constrained production optimization with sensitivity analysis
+- **Portfolio Optimization**: Investment allocation under risk constraints
+- **Transportation Problems**: Supply chain and logistics optimization
 
-### Minimax/Game Theory Problems
-- **Zero-Sum Games**: Solve two-player zero-sum games (Rock-Paper-Scissors, Matching Pennies, etc.)
-- **Robust Optimization**: Minimize worst-case loss or maximize worst-case gain under uncertainty
-- **Security Games**: Optimal resource allocation in adversarial scenarios
-- **Portfolio Optimization**: Robust portfolio allocation minimizing maximum loss
+### 🎮 Minimax/Game Theory
+- **Zero-Sum Games**: Solve two-player games (Rock-Paper-Scissors, Matching Pennies, Battle of Sexes)
+- **Mixed Strategy Nash Equilibria**: Find optimal probabilistic strategies
+- **Robust Optimization**: Minimize worst-case loss under uncertainty
+- **Maximin Decisions**: Maximize worst-case gain (conservative strategies)
+- **Security Games**: Defender-attacker resource allocation
+- **Robust Portfolio**: Minimize maximum loss across market scenarios
+- **Production Planning**: Conservative production decisions (maximize minimum profit)
+- **Advertising Competition**: Market share games and competitive strategies
 
-### MCP Protocol Support
-- **Stdio Transport**: For local IDE integration (Kiro, Claude Desktop, etc.)
-- **HTTP/SSE Transport**: For web-based clients and remote access
-- Unified tool interface across both transports
-- Full JSON-RPC 2.0 compliance
+### 🔌 MCP Protocol Support
+- **Stdio Transport**: Local IDE integration (Kiro, Claude Desktop, Cline, etc.)
+- **HTTP/SSE Transport**: Web clients and remote access
+- **Unified Interface**: Same tools across both transports
+- **JSON-RPC 2.0**: Full protocol compliance
+- **Auto-approval**: Configure trusted tools for seamless execution
 
 ## Installation
 
@@ -184,18 +193,18 @@ If you've already installed `gurddy-mcp` via pip:
 }
 ```
 
-Available MCP tools:
-- `info` - Get gurddy package information
+Available MCP tools (13 total):
+- `info` - Get gurddy MCP server information and capabilities
 - `install` - Install or upgrade the gurddy package
-- `run_example` - Run example programs (n_queens, graph_coloring, minimax, etc.)
-- `solve_n_queens` - Solve N-Queens problem
-- `solve_sudoku` - Solve Sudoku puzzles
-- `solve_graph_coloring` - Solve graph coloring problems
-- `solve_map_coloring` - Solve map coloring problems
-- `solve_lp` - Solve Linear Programming (LP) or Mixed Integer Programming (MIP) problems
-- `solve_production_planning` - Solve production planning optimization problems
-- `solve_minimax_game` - Solve two-player zero-sum games using minimax
-- `solve_minimax_decision` - Solve minimax decision problems under uncertainty
+- `run_example` - Run example programs (n_queens, graph_coloring, minimax, logic_puzzles, etc.)
+- `solve_n_queens` - Solve N-Queens problem for any board size
+- `solve_sudoku` - Solve 9×9 Sudoku puzzles using CSP
+- `solve_graph_coloring` - Solve graph coloring with configurable colors
+- `solve_map_coloring` - Solve map coloring problems (e.g., Australia, USA)
+- `solve_lp` - Solve Linear Programming (LP) or Mixed Integer Programming (MIP)
+- `solve_production_planning` - Production optimization with optional sensitivity analysis
+- `solve_minimax_game` - Two-player zero-sum games (find Nash equilibria)
+- `solve_minimax_decision` - Robust optimization (minimize max loss or maximize min gain)
 
 Test the MCP server:
 ```bash
@@ -585,34 +594,47 @@ All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_
 
 ### Supported Problem Types
 
-#### CSP Problems
-- **N-Queens**: The classic N-Queens problem, supporting chessboards of any size
-- **Graph Coloring**: Vertex coloring of arbitrary graph structures  
-- **Map Coloring**: Coloring geographic regions, verifying the Four Color Theorem
-- **Sudoku**: Solving standard 9×9 Sudoku puzzles
-- **Logic Puzzles**: Including classic logical reasoning problems such as the Zebra Puzzle
-- **Scheduling**: Course scheduling, meeting scheduling, resource allocation, etc.
+#### 🧩 CSP Problems
+- **N-Queens**: Classic N-Queens problem for any board size (N=4 to N=100+)
+- **Graph Coloring**: Vertex coloring for arbitrary graphs (triangle, Petersen, wheel, etc.)
+- **Map Coloring**: Geographic region coloring (Australia, USA, Europe maps)
+- **Sudoku**: Standard 9×9 Sudoku puzzles with constraint propagation
+- **Logic Puzzles**: Einstein's Zebra puzzle and custom logical reasoning problems
+- **Scheduling**: Course scheduling, meeting rooms, resource allocation with time constraints
 
-#### Optimization Problems
-- **Linear Programming**: Linear optimization with continuous variables
-- **Integer Programming**: Optimization with discrete variables
-- **Production Planning**: Production optimization under resource constraints
-- **Mixed Integer Programming**: Optimization with a mix of continuous and discrete variables
-- **Minimax Optimization**: Robust optimization under uncertainty (minimize worst-case loss)
-- **Game Theory**: Two-player zero-sum games, mixed strategy Nash equilibria
+#### 📈 Optimization Problems
+- **Linear Programming**: Continuous variable optimization with linear constraints
+- **Integer Programming**: Discrete variable optimization (production quantities, assignments)
+- **Mixed Integer Programming**: Combined continuous and discrete variables
+- **Production Planning**: Multi-product resource-constrained optimization
+- **Portfolio Optimization**: Investment allocation with risk and return constraints
+- **Transportation**: Supply chain optimization (warehouses to customers)
+
+#### 🎲 Game Theory & Robust Optimization
+- **Zero-Sum Games**: Rock-Paper-Scissors, Matching Pennies, Battle of Sexes
+- **Mixed Strategy Nash Equilibria**: Optimal probabilistic strategies for both players
+- **Minimax Decisions**: Minimize worst-case loss across uncertainty scenarios
+- **Maximin Decisions**: Maximize worst-case gain (conservative strategies)
+- **Robust Portfolio**: Minimize maximum loss across market scenarios
+- **Security Games**: Defender-attacker resource allocation problems
 
 ## Performance Features
 
-- **Fast Solution**: Typically completes in milliseconds for small to medium-sized problems (N-Queens with N ≤ 12, graph coloring with < 50 vertices)
-- **Memory Efficient**: Uses backtracking search and constraint propagation, resulting in a small memory footprint.
-- **Extensible**: Supports custom constraints and objective functions
-- **Concurrency-Safe**: The HTTP API supports concurrent request processing
+- **Fast Solution**: Millisecond response for small-medium problems (N-Queens N≤12, graphs <50 vertices)
+- **Scalable**: Handles large problems (N-Queens N=100+, LP with 1000+ variables)
+- **Memory Efficient**: Backtracking search and constraint propagation minimize memory usage
+- **Extensible**: Custom constraints, objective functions, and problem types
+- **Concurrency-Safe**: HTTP API supports concurrent request processing
+- **Production Ready**: Docker deployment, health checks, error handling
 
-## Performance
+## Performance Benchmarks
 
-All examples run efficiently:
-- **CSP Examples**: 0.4-0.5 seconds (N-Queens, Graph Coloring, etc.)
-- **LP Examples**: 0.8-0.9 seconds (Portfolio optimization, Transportation, etc.)
+Typical execution times on standard hardware:
+- **CSP Examples**: 0.4-0.5s (N-Queens, Graph Coloring, Logic Puzzles)
+- **LP Examples**: 0.8-0.9s (Portfolio, Transportation, Production Planning)
+- **Minimax Examples**: 0.3-0.5s (Game solving, Robust optimization)
+- **Sudoku**: <0.1s for standard 9×9 puzzles
+- **Large N-Queens**: ~2-3s for N=100
 
 ## Troubleshooting
 

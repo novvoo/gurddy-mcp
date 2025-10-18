@@ -2,34 +2,29 @@
 Gurddy MCP Server - Model Context Protocol server for optimization problems.
 
 This package provides a complete MCP server implementation for solving
-Constraint Satisfaction Problems (CSP) and Linear Programming (LP) problems
-using the Gurddy optimization library.
+Constraint Satisfaction Problems (CSP), Linear Programming (LP), and
+Game Theory problems using the Gurddy optimization library.
 
 Features:
-- N-Queens problem solving
-- Graph coloring algorithms
-- Map coloring problems
-- Scheduling optimization
-- Logic puzzles (including Einstein's Zebra puzzle)
-- Sudoku solver
-- Linear programming optimization
-- Production planning
-- HTTP API interface
-- Command-line tools
+- CSP: N-Queens, Graph/Map Coloring, Sudoku, Logic Puzzles, Scheduling
+- LP/MIP: Linear Programming, Production Planning, Portfolio Optimization
+- Game Theory: Minimax, Zero-Sum Games, Robust Optimization
+- Dual Transport: Stdio (IDE integration) and HTTP/SSE (web clients)
+- Command-line tools and Python API
 
 Usage:
-    # As MCP server
-    python -m mcp_server.server
+    # As MCP stdio server (for IDE integration)
+    gurddy-mcp
 
     # Run examples
-    python -m mcp_server.server run-example n_queens
+    python -m mcp_server.server run-example minimax
 
     # HTTP API server
     uvicorn mcp_server.mcp_http_server:app --host 0.0.0.0 --port 8080
 
     # Direct import
-    from mcp_server.handlers.gurddy import solve_n_queens
-    result = solve_n_queens(8)
+    from mcp_server.handlers.gurddy import solve_minimax_game
+    result = solve_minimax_game([[0, -1, 1], [1, 0, -1], [-1, 1, 0]], player="row")
 """
 
 __version__ = "0.1.0"

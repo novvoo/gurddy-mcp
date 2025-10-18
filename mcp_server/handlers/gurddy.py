@@ -40,10 +40,12 @@ def info() -> Dict[str, str]:
     This avoids network access and provides the MCP summary.
     """
     desc = (
-        "Gurddy is a lightweight Python package designed to model and solve Constraint "
-        "Satisfaction Problems (CSP) and Linear Programming (LP) problems with ease. "
-        "It exposes a Model/Variable/Constraint API and includes both CSP and LP solver "
-        "wrappers (LP via PuLP). See examples for usage."
+        "Gurddy MCP Server provides comprehensive optimization and problem-solving capabilities through MCP. "
+        "Supports CSP (N-Queens, Graph/Map Coloring, Sudoku, Logic Puzzles, Scheduling), "
+        "LP/MIP (Linear Programming, Production Planning, Portfolio Optimization), "
+        "and Game Theory (Minimax, Zero-Sum Games, Robust Optimization). "
+        "Built on gurddy optimization library with PuLP integration. "
+        "Available via stdio (IDE integration) and HTTP/SSE (web clients)."
     )
     return {"name": "gurddy", "description": desc}
 

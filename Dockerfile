@@ -10,8 +10,13 @@ ENV PYTHONUNBUFFERED=1
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
+# Copy codes
+COPY . . 
+
+
 # Install the package
-RUN pip install --no-cache-dir --upgrade gurddy-mcp
+RUN pip install --no-cache-dir --upgrade .
+
 
 # Expose port for MCP HTTP server
 EXPOSE 8080

@@ -43,8 +43,10 @@ def info() -> Dict[str, str]:
         "Gurddy MCP Server provides comprehensive optimization and problem-solving capabilities through MCP. "
         "Supports CSP (N-Queens, Graph/Map Coloring, Sudoku, Logic Puzzles, Scheduling), "
         "LP/MIP (Linear Programming, Production Planning, Portfolio Optimization), "
-        "and Game Theory (Minimax, Zero-Sum Games, Robust Optimization). "
-        "Built on gurddy optimization library with PuLP integration. "
+        "Game Theory (Minimax, Zero-Sum Games, Robust Optimization), "
+        "and SciPy Integration (Nonlinear Optimization, Statistical Fitting, Signal Processing, Hybrid CSP-SciPy). "
+        "Includes classic math problems (24-point game, chicken-rabbit, mini sudoku). "
+        "Built on gurddy with PuLP and SciPy integration. "
         "Available via stdio (IDE integration) and HTTP/SSE (web clients)."
     )
     return {"name": "gurddy", "description": desc}
@@ -68,7 +70,9 @@ def run_example(example_name: str) -> Dict[str, Optional[str]]:
         'logic_puzzles': 'logic_puzzles.py',
         'optimized_csp': 'optimized_csp.py',
         'optimized_lp': 'optimized_lp.py',
-        'minimax': 'minimax.py'
+        'minimax': 'minimax.py',
+        'scipy_optimization': 'scipy_optimization.py',
+        'classic_problems': 'classic_problems.py'
     }
     
     if example_name not in example_scripts:
@@ -488,4 +492,389 @@ def solve_minimax_decision(scenarios: List[Dict[str, float]], decision_vars: Lis
                    "error": f"Unknown objective: {objective}. Use 'minimize_max_loss' or 'maximize_min_gain'"}
     except Exception as e:
         return {"success": False, "decision": None, "objective_value": None, "error": str(e)}
+
+
+def solve_24_point_game(numbers: List[int]) -> Dict[str, Any]:
+    """Solve 24-point game with given four numbers.
+    
+    Args:
+        numbers: List of 4 integers
+        
+    Returns:
+        Dict with success, expression (str), and error
+    """
+    if not isinstance(numbers, list) or len(numbers) != 4:
+        return {"success": False, "expression": None, "error": "numbers must be a list of exactly 4 integers"}
+    
+    if not all(isinstance(n, int) for n in numbers):
+        return {"success": False, "expression": None, "error": "all numbers must be integers"}
+    
+    try:
+        from itertools import permutations
+        
+        operators = ['+', '-', '*', '/']
+        op_funcs = {
+            '+': lambda a, b: a + b,
+            '-': lambda a, b: a - b,
+            '*': lambda a, b: a * b,
+            '/': lambda a, b: a / b if b != 0 else float('inf')
+        }
+        
+        # Try all permutations of numbers and operators
+        for perm in permutations(numbers):
+            a, b, c, d = perm
+            for op1 in operators:
+                for op2 in operators:
+                    for op3 in operators:
+                        # Try different parentheses patterns
+                        expressions = [
+                            f"(({a} {op1} {b}) {op2} {c}) {op3} {d}",
+                            f"({a} {op1} ({b} {op2} {c})) {op3} {d}",
+                            f"{a} {op1} (({b} {op2} {c}) {op3} {d})",
+                            f"{a} {op1} ({b} {op2} ({c} {op3} {d}))",
+                            f"({a} {op1} {b}) {op2} ({c} {op3} {d})"
+                        ]
+                        
+                        for expr in expressions:
+                            try:
+                                result = eval(expr)
+                                if abs(result - 24) < 1e-6:
+                                    return {"success": True, "expression": expr, "error": None}
+                            except (ZeroDivisionError, ValueError):
+                                continue
+        
+        return {"success": False, "expression": None, "error": "No solution found"}
+    except Exception as e:
+        return {"success": False, "expression": None, "error": str(e)}
+
+
+def solve_chicken_rabbit_problem(total_heads: int, total_legs: int) -> Dict[str, Any]:
+    """Solve chicken-rabbit problem.
+    
+    Args:
+        total_heads: Total number of heads
+        total_legs: Total number of legs
+        
+    Returns:
+        Dict with success, chickens (int), rabbits (int), and error
+    """
+    if not isinstance(total_heads, int) or not isinstance(total_legs, int):
+        return {"success": False, "chickens": None, "rabbits": None, "error": "heads and legs must be integers"}
+    
+    if total_heads < 0 or total_legs < 0:
+        return {"success": False, "chickens": None, "rabbits": None, "error": "heads and legs must be non-negative"}
+    
+    try:
+        # Solve using linear equations: chickens + rabbits = total_heads, 2*chickens + 4*rabbits = total_legs
+        # From first equation: chickens = total_heads - rabbits
+        # Substitute into second: 2*(total_heads - rabbits) + 4*rabbits = total_legs
+        # Simplify: 2*total_heads - 2*rabbits + 4*rabbits = total_legs
+        # Solve: 2*rabbits = total_legs - 2*total_heads
+        # Therefore: rabbits = (total_legs - 2*total_heads) / 2
+        
+        if (total_legs - 2 * total_heads) % 2 != 0:
+            return {"success": False, "chickens": None, "rabbits": None, "error": "No integer solution exists"}
+        
+        rabbits = (total_legs - 2 * total_heads) // 2
+        chickens = total_heads - rabbits
+        
+        if chickens < 0 or rabbits < 0:
+            return {"success": False, "chickens": None, "rabbits": None, "error": "No valid solution (negative animals)"}
+        
+        # Verify solution
+        if chickens + rabbits == total_heads and 2 * chickens + 4 * rabbits == total_legs:
+            return {"success": True, "chickens": chickens, "rabbits": rabbits, "error": None}
+        else:
+            return {"success": False, "chickens": None, "rabbits": None, "error": "Solution verification failed"}
+    except Exception as e:
+        return {"success": False, "chickens": None, "rabbits": None, "error": str(e)}
+
+
+def solve_scipy_portfolio_optimization(expected_returns: List[float], covariance_matrix: List[List[float]], 
+                                     risk_tolerance: float = 1.0) -> Dict[str, Any]:
+    """Solve nonlinear portfolio optimization using SciPy.
+    
+    Args:
+        expected_returns: List of expected returns for each asset
+        covariance_matrix: Covariance matrix (2D list)
+        risk_tolerance: Risk tolerance parameter
+        
+    Returns:
+        Dict with success, weights (list), expected_return, risk, and error
+    """
+    try:
+        import numpy as np
+        from scipy.optimize import minimize
+    except ImportError:
+        return {"success": False, "weights": None, "expected_return": None, "risk": None, 
+               "error": "SciPy not available. Install with: pip install scipy numpy"}
+    
+    if not isinstance(expected_returns, list) or not isinstance(covariance_matrix, list):
+        return {"success": False, "weights": None, "expected_return": None, "risk": None, 
+               "error": "expected_returns and covariance_matrix must be lists"}
+    
+    try:
+        n_assets = len(expected_returns)
+        mu = np.array(expected_returns)
+        cov = np.array(covariance_matrix)
+        
+        if cov.shape != (n_assets, n_assets):
+            return {"success": False, "weights": None, "expected_return": None, "risk": None, 
+                   "error": f"covariance_matrix must be {n_assets}x{n_assets}"}
+        
+        # Objective function: maximize return - risk_tolerance * risk
+        def objective(weights):
+            portfolio_return = np.dot(weights, mu)
+            portfolio_risk = np.sqrt(np.dot(weights, np.dot(cov, weights)))
+            return -(portfolio_return - risk_tolerance * portfolio_risk)
+        
+        # Constraints: weights sum to 1
+        constraints = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+        
+        # Bounds: weights between 0 and 1
+        bounds = [(0, 1) for _ in range(n_assets)]
+        
+        # Initial guess: equal weights
+        x0 = np.ones(n_assets) / n_assets
+        
+        # Optimize
+        result = minimize(objective, x0, method='SLSQP', bounds=bounds, constraints=constraints)
+        
+        if result.success:
+            weights = result.x.tolist()
+            expected_return = float(np.dot(weights, mu))
+            risk = float(np.sqrt(np.dot(weights, np.dot(cov, weights))))
+            return {"success": True, "weights": weights, "expected_return": expected_return, "risk": risk, "error": None}
+        else:
+            return {"success": False, "weights": None, "expected_return": None, "risk": None, 
+                   "error": f"Optimization failed: {result.message}"}
+    except Exception as e:
+        return {"success": False, "weights": None, "expected_return": None, "risk": None, "error": str(e)}
+
+
+def solve_scipy_statistical_fitting(data: List[float], distribution: str = "normal") -> Dict[str, Any]:
+    """Solve statistical parameter estimation using SciPy.
+    
+    Args:
+        data: List of data points
+        distribution: Distribution type ("normal", "exponential", "uniform")
+        
+    Returns:
+        Dict with success, parameters (dict), goodness_of_fit, and error
+    """
+    try:
+        import numpy as np
+        from scipy import stats
+    except ImportError:
+        return {"success": False, "parameters": None, "goodness_of_fit": None, 
+               "error": "SciPy not available. Install with: pip install scipy numpy"}
+    
+    if not isinstance(data, list) or len(data) < 2:
+        return {"success": False, "parameters": None, "goodness_of_fit": None, 
+               "error": "data must be a list with at least 2 points"}
+    
+    try:
+        data_array = np.array(data)
+        
+        if distribution == "normal":
+            # Fit normal distribution
+            mu, sigma = stats.norm.fit(data_array)
+            # Kolmogorov-Smirnov test
+            ks_stat, p_value = stats.kstest(data_array, lambda x: stats.norm.cdf(x, mu, sigma))
+            return {
+                "success": True,
+                "parameters": {"mean": float(mu), "std": float(sigma)},
+                "goodness_of_fit": {"ks_statistic": float(ks_stat), "p_value": float(p_value)},
+                "error": None
+            }
+        elif distribution == "exponential":
+            # Fit exponential distribution
+            loc, scale = stats.expon.fit(data_array)
+            ks_stat, p_value = stats.kstest(data_array, lambda x: stats.expon.cdf(x, loc, scale))
+            return {
+                "success": True,
+                "parameters": {"location": float(loc), "scale": float(scale)},
+                "goodness_of_fit": {"ks_statistic": float(ks_stat), "p_value": float(p_value)},
+                "error": None
+            }
+        elif distribution == "uniform":
+            # Fit uniform distribution
+            loc, scale = stats.uniform.fit(data_array)
+            ks_stat, p_value = stats.kstest(data_array, lambda x: stats.uniform.cdf(x, loc, scale))
+            return {
+                "success": True,
+                "parameters": {"min": float(loc), "max": float(loc + scale)},
+                "goodness_of_fit": {"ks_statistic": float(ks_stat), "p_value": float(p_value)},
+                "error": None
+            }
+        else:
+            return {"success": False, "parameters": None, "goodness_of_fit": None, 
+                   "error": f"Unsupported distribution: {distribution}. Use 'normal', 'exponential', or 'uniform'"}
+    except Exception as e:
+        return {"success": False, "parameters": None, "goodness_of_fit": None, "error": str(e)}
+
+
+def solve_scipy_facility_location(customer_locations: List[List[float]], customer_demands: List[float],
+                                 facility_locations: List[List[float]], max_facilities: int = 2,
+                                 fixed_cost: float = 100.0) -> Dict[str, Any]:
+    """Solve facility location problem using hybrid CSP-SciPy approach.
+    
+    Args:
+        customer_locations: List of [x, y] coordinates for customers
+        customer_demands: List of demand values for each customer
+        facility_locations: List of [x, y] coordinates for potential facilities
+        max_facilities: Maximum number of facilities to select
+        fixed_cost: Fixed cost for opening each facility
+        
+    Returns:
+        Dict with success, selected_facilities, capacities, total_cost, and error
+    """
+    if gurddy is None:
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": "gurddy package not available"}
+    
+    try:
+        import numpy as np
+        from scipy.optimize import minimize
+    except ImportError:
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": "SciPy not available. Install with: pip install scipy numpy"}
+    
+    if not all(isinstance(x, list) and len(x) == 2 for x in customer_locations):
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": "customer_locations must be list of [x, y] coordinates"}
+    
+    if not all(isinstance(x, list) and len(x) == 2 for x in facility_locations):
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": "facility_locations must be list of [x, y] coordinates"}
+    
+    if len(customer_demands) != len(customer_locations):
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": "customer_demands length must match customer_locations length"}
+    
+    try:
+        num_facilities = len(facility_locations)
+        num_customers = len(customer_locations)
+        
+        customer_locs = np.array(customer_locations)
+        facility_locs = np.array(facility_locations)
+        demands = np.array(customer_demands)
+        
+        # Step 1: CSP for facility selection (with fallback)
+        selected_facilities = []
+        
+        if gurddy is not None:
+            try:
+                model = gurddy.Model("FacilitySelection", "CSP")
+                
+                # Binary variables: facility i is selected or not
+                facility_vars = {}
+                for i in range(num_facilities):
+                    facility_vars[i] = model.addVar(f"facility_{i}", domain=[0, 1])
+                
+                # Constraint: select at most max_facilities
+                def budget_constraint(*facilities):
+                    return sum(facilities) <= max_facilities
+                
+                model.addConstraint(gurddy.FunctionConstraint(
+                    budget_constraint, tuple(facility_vars.values())
+                ))
+                
+                # Constraint: at least one facility must be selected
+                def min_facilities_constraint(*facilities):
+                    return sum(facilities) >= 1
+                
+                model.addConstraint(gurddy.FunctionConstraint(
+                    min_facilities_constraint, tuple(facility_vars.values())
+                ))
+                
+                # Solve CSP
+                csp_solution = model.solve()
+                
+                if csp_solution:
+                    selected_facilities = [i for i in range(num_facilities) 
+                                         if csp_solution[f"facility_{i}"] == 1]
+            except Exception:
+                pass  # Fall back to heuristic selection
+        
+        # Fallback: Use heuristic selection if CSP fails or gurddy unavailable
+        if not selected_facilities:
+            # Simple heuristic: select facilities closest to customer centroids
+            customer_centroid = np.mean(customer_locs, axis=0)
+            distances_to_centroid = [
+                np.linalg.norm(facility_locs[i] - customer_centroid) 
+                for i in range(num_facilities)
+            ]
+            # Select the closest facilities up to max_facilities
+            sorted_indices = sorted(range(num_facilities), key=lambda i: distances_to_centroid[i])
+            selected_facilities = sorted_indices[:min(max_facilities, num_facilities)]
+        
+        if not selected_facilities:
+            return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+                   "error": "No facilities could be selected"}
+        
+        # Step 2: SciPy optimization for capacities and routing
+        n_selected = len(selected_facilities)
+        selected_locs = facility_locs[selected_facilities]
+        
+        # Calculate distances between selected facilities and customers
+        distances = np.zeros((n_selected, num_customers))
+        for i, fac_idx in enumerate(selected_facilities):
+            for j in range(num_customers):
+                distances[i, j] = np.linalg.norm(facility_locs[fac_idx] - customer_locs[j])
+        
+        # Optimization variables: facility capacities
+        def objective(capacities):
+            # Fixed costs for opening facilities
+            total_cost = len(selected_facilities) * fixed_cost
+            
+            # Variable costs based on capacity
+            total_cost += np.sum(capacities) * 10  # Cost per unit capacity
+            
+            # Transportation costs (simplified)
+            for j in range(num_customers):
+                # Assign customer to nearest facility with sufficient capacity
+                min_cost = float('inf')
+                for i in range(n_selected):
+                    if capacities[i] >= demands[j]:
+                        transport_cost = distances[i, j] * demands[j]
+                        min_cost = min(min_cost, transport_cost)
+                if min_cost != float('inf'):
+                    total_cost += min_cost
+                else:
+                    # Penalty for unserved demand
+                    total_cost += 1000 * demands[j]
+            
+            return total_cost
+        
+        # Constraints: each facility must have enough capacity for total demand
+        total_demand = np.sum(demands)
+        min_capacity_per_facility = total_demand / n_selected
+        
+        # Bounds: reasonable capacity limits
+        bounds = [(min_capacity_per_facility, total_demand) for _ in range(n_selected)]
+        
+        # Initial guess: equal capacity distribution
+        x0 = np.full(n_selected, total_demand / n_selected)
+        
+        # Optimize
+        result = minimize(objective, x0, method='L-BFGS-B', bounds=bounds)
+        
+        if result.success:
+            capacities = result.x.tolist()
+            total_cost = float(result.fun)
+            return {
+                "success": True,
+                "selected_facilities": selected_facilities,
+                "capacities": capacities,
+                "total_cost": total_cost,
+                "error": None
+            }
+        else:
+            return {"success": False, "selected_facilities": selected_facilities, "capacities": None, 
+                   "total_cost": None, "error": f"Capacity optimization failed: {result.message}"}
+    
+    except Exception as e:
+        return {"success": False, "selected_facilities": None, "capacities": None, "total_cost": None,
+               "error": str(e)}
 

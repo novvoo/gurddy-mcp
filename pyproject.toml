@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gurddy_mcp"
-version = "0.1.5"
-description = "MCP (Model Context Protocol) server for Gurddy optimization library - CSP and LP problem solving"
+version = "0.1.6"
+description = "MCP (Model Context Protocol) server for Gurddy optimization library - CSP, LP, and SciPy integration for advanced optimization"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -16,7 +16,8 @@ maintainers = [
 ]
 keywords = [
     "mcp", "model-context-protocol", "optimization", "constraint-satisfaction", 
-    "linear-programming", "csp", "lp", "gurddy", "solver", "ai-assistant"
+    "linear-programming", "csp", "lp", "gurddy", "solver", "ai-assistant",
+    "scipy", "nonlinear-optimization", "statistical-optimization", "signal-processing"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -39,8 +40,10 @@ dependencies = [
     "uvicorn[standard]>=0.22.0",
     "requests>=2.0",
     "pulp>=2.6.0",
-    "gurddy>=0.1.7",
+    "gurddy>=0.1.8",
     "pydantic>=2.0.0",
+    "scipy>=1.9.0",
+    "numpy>=1.21.0",
 ]
 
 [project.optional-dependencies]

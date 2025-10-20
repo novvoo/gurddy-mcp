@@ -24,6 +24,11 @@ from mcp_server.handlers.gurddy import (
     solve_production_planning,
     solve_minimax_game,
     solve_minimax_decision,
+    solve_24_point_game,
+    solve_chicken_rabbit_problem,
+    solve_scipy_portfolio_optimization,
+    solve_scipy_statistical_fitting,
+    solve_scipy_facility_location,
 )
 
 
@@ -60,14 +65,14 @@ class MCPStdioServer:
                 }
             },
             "run_example": {
-                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp, minimax)",
+                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp, minimax, scipy_optimization, classic_problems)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "example": {
                             "type": "string",
                             "description": "Example name to run",
-                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax"]
+                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax", "scipy_optimization", "classic_problems"]
                         }
                     },
                     "required": ["example"]
@@ -257,6 +262,130 @@ class MCPStdioServer:
                     },
                     "required": ["scenarios", "decision_vars"]
                 }
+            },
+            "solve_24_point_game": {
+                "description": "Solve 24-point game with four numbers using arithmetic operations",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "numbers": {
+                            "type": "array",
+                            "description": "List of exactly 4 integers",
+                            "items": {"type": "integer"},
+                            "minItems": 4,
+                            "maxItems": 4
+                        }
+                    },
+                    "required": ["numbers"]
+                }
+            },
+            "solve_chicken_rabbit_problem": {
+                "description": "Solve classic chicken-rabbit problem with heads and legs constraints",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "total_heads": {
+                            "type": "integer",
+                            "description": "Total number of heads"
+                        },
+                        "total_legs": {
+                            "type": "integer",
+                            "description": "Total number of legs"
+                        }
+                    },
+                    "required": ["total_heads", "total_legs"]
+                }
+            },
+            "solve_scipy_portfolio_optimization": {
+                "description": "Solve nonlinear portfolio optimization using SciPy",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "expected_returns": {
+                            "type": "array",
+                            "description": "Expected returns for each asset",
+                            "items": {"type": "number"}
+                        },
+                        "covariance_matrix": {
+                            "type": "array",
+                            "description": "Covariance matrix (2D array)",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"}
+                            }
+                        },
+                        "risk_tolerance": {
+                            "type": "number",
+                            "description": "Risk tolerance parameter",
+                            "default": 1.0
+                        }
+                    },
+                    "required": ["expected_returns", "covariance_matrix"]
+                }
+            },
+            "solve_scipy_statistical_fitting": {
+                "description": "Solve statistical parameter estimation using SciPy",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "description": "List of data points",
+                            "items": {"type": "number"}
+                        },
+                        "distribution": {
+                            "type": "string",
+                            "description": "Distribution type to fit",
+                            "enum": ["normal", "exponential", "uniform"],
+                            "default": "normal"
+                        }
+                    },
+                    "required": ["data"]
+                }
+            },
+            "solve_scipy_facility_location": {
+                "description": "Solve facility location problem using hybrid CSP-SciPy approach",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "customer_locations": {
+                            "type": "array",
+                            "description": "List of [x, y] coordinates for customers",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                                "minItems": 2,
+                                "maxItems": 2
+                            }
+                        },
+                        "customer_demands": {
+                            "type": "array",
+                            "description": "List of demand values for each customer",
+                            "items": {"type": "number"}
+                        },
+                        "facility_locations": {
+                            "type": "array",
+                            "description": "List of [x, y] coordinates for potential facilities",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                                "minItems": 2,
+                                "maxItems": 2
+                            }
+                        },
+                        "max_facilities": {
+                            "type": "integer",
+                            "description": "Maximum number of facilities to select",
+                            "default": 2
+                        },
+                        "fixed_cost": {
+                            "type": "number",
+                            "description": "Fixed cost for opening each facility",
+                            "default": 100.0
+                        }
+                    },
+                    "required": ["customer_locations", "customer_demands", "facility_locations"]
+                }
             }
         }
     
@@ -278,7 +407,7 @@ class MCPStdioServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.0"
+                            "version": "0.1.6"
                         }
                     }
                 }
@@ -420,6 +549,44 @@ class MCPStdioServer:
             if scenarios is None or decision_vars is None:
                 return {"error": "scenarios and decision_vars are required"}
             return solve_minimax_decision(scenarios, decision_vars, budget, objective)
+        
+        elif tool_name == "solve_24_point_game":
+            numbers = arguments.get("numbers")
+            if numbers is None:
+                return {"error": "numbers parameter is required"}
+            return solve_24_point_game(numbers)
+        
+        elif tool_name == "solve_chicken_rabbit_problem":
+            total_heads = arguments.get("total_heads")
+            total_legs = arguments.get("total_legs")
+            if total_heads is None or total_legs is None:
+                return {"error": "total_heads and total_legs are required"}
+            return solve_chicken_rabbit_problem(total_heads, total_legs)
+        
+        elif tool_name == "solve_scipy_portfolio_optimization":
+            expected_returns = arguments.get("expected_returns")
+            covariance_matrix = arguments.get("covariance_matrix")
+            risk_tolerance = arguments.get("risk_tolerance", 1.0)
+            if expected_returns is None or covariance_matrix is None:
+                return {"error": "expected_returns and covariance_matrix are required"}
+            return solve_scipy_portfolio_optimization(expected_returns, covariance_matrix, risk_tolerance)
+        
+        elif tool_name == "solve_scipy_statistical_fitting":
+            data = arguments.get("data")
+            distribution = arguments.get("distribution", "normal")
+            if data is None:
+                return {"error": "data parameter is required"}
+            return solve_scipy_statistical_fitting(data, distribution)
+        
+        elif tool_name == "solve_scipy_facility_location":
+            customer_locations = arguments.get("customer_locations")
+            customer_demands = arguments.get("customer_demands")
+            facility_locations = arguments.get("facility_locations")
+            max_facilities = arguments.get("max_facilities", 2)
+            fixed_cost = arguments.get("fixed_cost", 100.0)
+            if customer_locations is None or customer_demands is None or facility_locations is None:
+                return {"error": "customer_locations, customer_demands, and facility_locations are required"}
+            return solve_scipy_facility_location(customer_locations, customer_demands, facility_locations, max_facilities, fixed_cost)
         
         else:
             return {"error": f"Unknown tool: {tool_name}"}

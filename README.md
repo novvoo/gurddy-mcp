@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-gurddy--mcp.fly.dev-blue)](https://gurddy-mcp.fly.dev)
 
-A comprehensive Model Context Protocol (MCP) server for solving Constraint Satisfaction Problems (CSP), Linear Programming (LP), and Minimax optimization problems. Built on the `gurddy` optimization library, it supports solving various classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
+A comprehensive Model Context Protocol (MCP) server for solving Constraint Satisfaction Problems (CSP), Linear Programming (LP), Minimax optimization, and SciPy-powered advanced optimization problems. Built on the `gurddy` optimization library with SciPy integration, it supports solving various classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
 
 **🚀 Quick Start (Stdio):** `pip install gurddy_mcp` then configure in your IDE
 
@@ -41,6 +41,20 @@ A comprehensive Model Context Protocol (MCP) server for solving Constraint Satis
 - **Production Planning**: Conservative production decisions (maximize minimum profit)
 - **Advertising Competition**: Market share games and competitive strategies
 
+### 🔬 SciPy Integration
+- **Nonlinear Portfolio Optimization**: Quadratic risk models with SciPy optimization
+- **Statistical Parameter Estimation**: Distribution fitting with constraints (MLE, quantile matching)
+- **Signal Processing Optimization**: FIR filter design with frequency response optimization
+- **Hybrid CSP-SciPy**: Discrete facility selection + continuous capacity optimization
+- **Numerical Integration**: Optimization problems involving integrals and complex functions
+
+### 🧮 Classic Math Problems
+- **24-Point Game**: Find arithmetic expressions to reach 24 using four numbers
+- **Chicken-Rabbit Problem**: Classic constraint problem with heads and legs
+- **Mini Sudoku**: 4×4 Sudoku solver using CSP techniques
+- **4-Queens Problem**: Simplified N-Queens for educational purposes
+- **0-1 Knapsack**: Classic optimization problem with weight and value constraints
+
 ### 🔌 MCP Protocol Support
 - **Stdio Transport**: Local IDE integration (Kiro, Claude Desktop, Cline, etc.)
 - **HTTP/SSE Transport**: Web clients and remote access
@@ -68,8 +82,6 @@ cd gurddy-mcp
 # Install in development mode
 pip install -e .
 
-# Or install dependencies manually
-pip install -r requirements.txt
 ```
 
 ### Verify Installation
@@ -108,7 +120,9 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
         "solve_graph_coloring",
         "solve_map_coloring",
         "solve_lp",
-        "solve_production_planning"
+        "solve_production_planning",
+        "solve_minimax_game",
+        "solve_minimax_decision"
       ]
     }
   }
@@ -124,7 +138,11 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
       "args": ["gurddy-mcp"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"]
+      "autoApprove": [
+        "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
+        "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
+      ]
     }
   }
 }
@@ -136,10 +154,14 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
   "mcpServers": {
     "gurddy": {
       "command": "uvx",
-      "args": ["gurddy-mcp==0.1.3"],
+      "args": ["gurddy-mcp==0.1.6"],
       "env": {},
       "disabled": false,
-      "autoApprove": ["run_example", "info", "install", "solve_n_queens", "solve_sudoku", "solve_graph_coloring", "solve_map_coloring", "solve_lp", "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"]
+      "autoApprove": [
+        "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
+        "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
+      ]
     }
   }
 }
@@ -176,17 +198,9 @@ If you've already installed `gurddy-mcp` via pip:
       "env": {},
       "disabled": false,
       "autoApprove": [
-        "run_example",
-        "info",
-        "install",
-        "solve_n_queens",
-        "solve_sudoku",
-        "solve_graph_coloring",
-        "solve_map_coloring",
-        "solve_lp",
-        "solve_production_planning",
-        "solve_minimax_game",
-        "solve_minimax_decision"
+        "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
+        "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
       ]
     }
   }
@@ -196,7 +210,7 @@ If you've already installed `gurddy-mcp` via pip:
 Available MCP tools (13 total):
 - `info` - Get gurddy MCP server information and capabilities
 - `install` - Install or upgrade the gurddy package
-- `run_example` - Run example programs (n_queens, graph_coloring, minimax, logic_puzzles, etc.)
+- `run_example` - Run example programs (n_queens, graph_coloring, minimax, scipy_optimization, classic_problems, etc.)
 - `solve_n_queens` - Solve N-Queens problem for any board size
 - `solve_sudoku` - Solve 9×9 Sudoku puzzles using CSP
 - `solve_graph_coloring` - Solve graph coloring with configurable colors
@@ -290,7 +304,7 @@ Run a gurddy example.
   }
 }
 ```
-Available examples: `lp`, `csp`, `n_queens`, `graph_coloring`, `map_coloring`, `scheduling`, `logic_puzzles`, `optimized_csp`, `optimized_lp`, `minimax`
+Available examples: `lp`, `csp`, `n_queens`, `graph_coloring`, `map_coloring`, `scheduling`, `logic_puzzles`, `optimized_csp`, `optimized_lp`, `minimax`, `scipy_optimization`, `classic_problems`
 
 ### solve_n_queens
 Solve the N-Queens problem.
@@ -469,12 +483,14 @@ mcp_server/
 ├── handlers/
 │   └── gurddy.py           # Core solver implementation
 ├── tools/                  # MCP tool wrappers
-├── examples/               # Rich CSP Problem Examples
+├── examples/               # Rich Problem Examples
 │   ├── n_queens.py         # N-Queens Problem
 │   ├── graph_coloring.py   # Graph Coloring Problem
 │   ├── map_coloring.py     # Map Coloring Problem
 │   ├── logic_puzzles.py    # Logic Puzzles
-│   └── scheduling.py       # Scheduling Problem
+│   ├── scheduling.py       # Scheduling Problem
+│   ├── scipy_optimization.py # SciPy Integration Examples
+│   └── classic_problems.py # Classic Math Problems
 ├── mcp_stdio_server.py     # MCP Stdio Server (for IDE integration)
 └── mcp_http_server.py      # MCP HTTP Server (for web clients)
 
@@ -592,6 +608,22 @@ All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_
   - Security resource allocation (defender-attacker game)
   - Advertising competition (market share game)
 
+### SciPy Integration Examples ✅ 
+- **scipy_optimization** - Advanced optimization with SciPy:
+  - Nonlinear portfolio optimization with quadratic risk models
+  - Statistical parameter estimation (distribution fitting with constraints)
+  - Signal processing optimization (FIR filter design)
+  - Hybrid CSP-SciPy facility location (discrete + continuous optimization)
+  - Numerical integration in optimization objectives
+
+### Classic Math Problems ✅ 
+- **classic_problems** - Educational math problem solving:
+  - 24-Point Game (arithmetic expressions to reach 24)
+  - Chicken-Rabbit Problem (classic constraint satisfaction)
+  - 4×4 Mini Sudoku (simplified CSP demonstration)
+  - 4-Queens Problem (educational N-Queens variant)
+  - 0-1 Knapsack Problem (classic optimization)
+
 ### Supported Problem Types
 
 #### 🧩 CSP Problems
@@ -618,6 +650,20 @@ All examples can be run using `gurddy-mcp run-example <name>` or `python -m mcp_
 - **Robust Portfolio**: Minimize maximum loss across market scenarios
 - **Security Games**: Defender-attacker resource allocation problems
 
+#### 🔬 SciPy-Powered Advanced Optimization 
+- **Nonlinear Portfolio Optimization**: Quadratic risk models with Sharpe ratio maximization
+- **Statistical Parameter Estimation**: MLE and quantile-based distribution fitting with constraints
+- **Signal Processing**: FIR filter design with frequency response optimization
+- **Hybrid Optimization**: Combine Gurddy CSP with SciPy continuous optimization
+- **Numerical Integration**: Optimization problems involving complex mathematical functions
+
+#### 🧮 Classic Educational Problems 
+- **24-Point Game**: Find arithmetic expressions using four numbers to reach 24
+- **Chicken-Rabbit Problem**: Classic constraint satisfaction with heads and legs
+- **Mini Sudoku**: 4×4 Sudoku solving using CSP techniques
+- **N-Queens Variants**: Educational versions of the classic problem
+- **Knapsack Problems**: 0-1 knapsack optimization with weight and value constraints
+
 ## Performance Features
 
 - **Fast Solution**: Millisecond response for small-medium problems (N-Queens N≤12, graphs <50 vertices)
@@ -633,6 +679,8 @@ Typical execution times on standard hardware:
 - **CSP Examples**: 0.4-0.5s (N-Queens, Graph Coloring, Logic Puzzles)
 - **LP Examples**: 0.8-0.9s (Portfolio, Transportation, Production Planning)
 - **Minimax Examples**: 0.3-0.5s (Game solving, Robust optimization)
+- **SciPy Examples**: 0.5-1.2s (Nonlinear optimization, Statistical fitting)
+- **Classic Problems**: 0.1-0.3s (24-point, Chicken-rabbit, Mini sudoku)
 - **Sudoku**: <0.1s for standard 9×9 puzzles
 - **Large N-Queens**: ~2-3s for N=100
 
@@ -646,14 +694,11 @@ Typical execution times on standard hardware:
 
 ### Installation Issues
 ```bash
-# Install all dependencies
-pip install -r requirements.txt
-
-# Or install individually
-pip install gurddy>=0.1.6 pulp>=2.6.0
+# install individually
+pip install gurddy>=0.1.8 pulp>=2.6.0 scipy>=1.9.0 numpy>=1.21.0
 
 # Check installation
-python -c "import gurddy, pulp; print('All dependencies installed')"
+python -c "import gurddy, pulp, scipy, numpy; print('All dependencies installed')"
 ```
 
 ### Example Debugging
@@ -666,7 +711,26 @@ python -c "from mcp_server.examples import n_queens; n_queens.main()"
 python mcp_server/examples/n_queens.py
 python mcp_server/examples/graph_coloring.py
 python mcp_server/examples/logic_puzzles.py
+python mcp_server/examples/scipy_optimization.py
+python mcp_server/examples/classic_problems.py
 ```
+
+### SciPy Integration Requirements
+The SciPy integration examples require additional dependencies:
+```bash
+# Install SciPy and NumPy 
+pip install scipy>=1.9.0 numpy>=1.21.0
+
+# Verify SciPy integration
+python -c "import scipy.optimize, numpy; print('SciPy integration ready')"
+```
+
+**SciPy Examples Include:**
+- **Nonlinear Portfolio Optimization**: Quadratic risk models with Sharpe ratio maximization
+- **Statistical Parameter Estimation**: Distribution fitting with MLE and quantile methods
+- **Signal Processing**: FIR filter design with frequency response optimization
+- **Hybrid CSP-SciPy**: Facility location combining discrete and continuous optimization
+- **Numerical Integration**: Complex optimization problems involving integrals
 
 ## Extension Development
 

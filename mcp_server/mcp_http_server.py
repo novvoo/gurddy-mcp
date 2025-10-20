@@ -27,13 +27,18 @@ from mcp_server.handlers.gurddy import (
     solve_production_planning,
     solve_minimax_game,
     solve_minimax_decision,
+    solve_24_point_game,
+    solve_chicken_rabbit_problem,
+    solve_scipy_portfolio_optimization,
+    solve_scipy_statistical_fitting,
+    solve_scipy_facility_location,
 )
 
 
 app = FastAPI(
     title="Gurddy MCP HTTP Server",
     description="MCP server for Gurddy optimization library via HTTP/SSE",
-    version="0.1.0"
+    version="0.1.6"
 )
 
 # Enable CORS for browser access
@@ -79,14 +84,14 @@ class MCPHTTPServer:
                 }
             },
             "run_example": {
-                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp, minimax)",
+                "description": "Run a gurddy example (lp, csp, n_queens, graph_coloring, map_coloring, scheduling, logic_puzzles, optimized_csp, optimized_lp, minimax, scipy_optimization, classic_problems)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "example": {
                             "type": "string",
                             "description": "Example name to run",
-                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax"]
+                            "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax", "scipy_optimization", "classic_problems"]
                         }
                     },
                     "required": ["example"]
@@ -297,7 +302,7 @@ class MCPHTTPServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.0"
+                            "version": "0.1.6"
                         }
                     }
                 }
@@ -453,7 +458,7 @@ async def root():
     """Root endpoint with server information."""
     return {
         "name": "Gurddy MCP HTTP Server",
-        "version": "0.1.0",
+        "version": "0.1.6",
         "protocol": "MCP over HTTP/SSE",
         "endpoints": {
             "sse": "/sse - Server-Sent Events endpoint for MCP communication",

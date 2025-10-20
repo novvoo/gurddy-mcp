@@ -407,7 +407,7 @@ class MCPStdioServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.7"
+                            "version": "0.1.8"
                         }
                     }
                 }
@@ -445,7 +445,7 @@ class MCPStdioServer:
             
             elif method == "notifications/initialized":
                 # No response needed for notifications
-                return None
+                return {"jsonrpc": "2.0", "id": request_id, "result": None}
             
             else:
                 return {

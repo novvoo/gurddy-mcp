@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Optional
+import uuid
+from typing import Any, Optional, Callable
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from starlette.middleware.cors import CORSMiddleware
 
@@ -38,7 +39,7 @@ from mcp_server.handlers.gurddy import (
 app = FastAPI(
     title="Gurddy MCP HTTP Server",
     description="MCP server for Gurddy optimization library via HTTP/SSE",
-    version="0.1.7"
+    version="0.1.8"
 )
 
 # Enable CORS for browser access
@@ -50,6 +51,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Allowed origins for Origin header validation
+ALLOWED_ORIGINS = ["localhost", "127.0.0.1", "0.0.0.0"]
+
+def validate_origin_header(request: Request):
+    """Validate Origin header to prevent DNS rebinding attacks."""
+    origin = request.headers.get("Origin")
+    if origin is None:
+        # If no Origin header, check Referer as fallback
+        referer = request.headers.get("Referer")
+        if referer is None:
+            # No origin information, allow for same-origin requests
+            return True
+        origin = referer
+    
+    # Parse the origin to get the hostname
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(origin)
+        hostname = parsed.hostname
+        
+        # Allow if hostname is None (file:// URLs) or in allowed list
+        if hostname is None or hostname in ALLOWED_ORIGINS or hostname.endswith(".localhost"):
+            return True
+            
+        # For local development, also allow local domains
+        if hostname.startswith("127.0.0.") or hostname == "0.0.0.0":
+            return True
+            
+        # Reject if origin is not allowed
+        return False
+    except Exception:
+        # If we can't parse the origin, reject the request
+        return False
 
 class MCPHTTPServer:
     """MCP HTTP server implementation."""
@@ -281,8 +315,144 @@ class MCPHTTPServer:
                     },
                     "required": ["scenarios", "decision_vars"]
                 }
+            },
+            "solve_scipy_portfolio_optimization": {
+                "description": "Solve portfolio optimization problem using SciPy",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "expected_returns": {
+                            "type": "array",
+                            "description": "List of expected returns for each asset",
+                            "items": {"type": "number"}
+                        },
+                        "covariance_matrix": {
+                            "type": "array",
+                            "description": "Covariance matrix of asset returns",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"}
+                            }
+                        },
+                        "risk_tolerance": {
+                            "type": "number",
+                            "description": "Risk tolerance coefficient",
+                            "default": 1.0
+                        }
+                    },
+                    "required": ["expected_returns", "covariance_matrix"]
+                }
+            },
+            "solve_scipy_statistical_fitting": {
+                "description": "Solve statistical fitting problem using SciPy",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "description": "List of data points",
+                            "items": {"type": "number"}
+                        },
+                        "model": {
+                            "type": "string",
+                            "description": "Model type (e.g., 'linear', 'quadratic')",
+                            "enum": ["linear", "quadratic"],
+                            "default": "linear"
+                        }
+                    },
+                    "required": ["data"]
+                }
+            },
+            "solve_scipy_facility_location": {
+                "description": "Solve facility location problem using hybrid CSP-SciPy approach",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "customer_locations": {
+                            "type": "array",
+                            "description": "List of [x, y] coordinates for customers",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"}
+                            }
+                        },
+                        "customer_demands": {
+                            "type": "array",
+                            "description": "List of demand values for each customer",
+                            "items": {"type": "number"}
+                        },
+                        "facility_locations": {
+                            "type": "array",
+                            "description": "List of [x, y] coordinates for potential facilities",
+                            "items": {
+                                "type": "array",
+                                "items": {"type": "number"}
+                            }
+                        },
+                        "max_facilities": {
+                            "type": "integer",
+                            "description": "Maximum number of facilities to select",
+                            "default": 2
+                        },
+                        "fixed_cost": {
+                            "type": "number",
+                            "description": "Fixed cost for opening each facility",
+                            "default": 100.0
+                        }
+                    },
+                    "required": ["customer_locations", "customer_demands", "facility_locations"]
+                }
+            },
+            "solve_24_point_game": {
+                "description": "Solve 24-point game with given four numbers",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "numbers": {
+                            "type": "array",
+                            "description": "List of 4 integers",
+                            "items": {"type": "integer"},
+                            "minItems": 4,
+                            "maxItems": 4
+                        }
+                    },
+                    "required": ["numbers"]
+                }
+            },
+            "solve_chicken_rabbit_problem": {
+                "description": "Solve chicken-rabbit problem with heads and legs constraints",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "total_heads": {
+                            "type": "integer",
+                            "description": "Total number of heads"
+                        },
+                        "total_legs": {
+                            "type": "integer",
+                            "description": "Total number of legs"
+                        }
+                    },
+                    "required": ["total_heads", "total_legs"]
+                }
             }
         }
+        # Store SSE connections
+        self.sse_connections = {}
+    
+    def add_sse_connection(self, connection_id, send_function):
+        """Add an SSE connection to the server."""
+        self.sse_connections[connection_id] = send_function
+    
+    def remove_sse_connection(self, connection_id):
+        """Remove an SSE connection from the server."""
+        if connection_id in self.sse_connections:
+            del self.sse_connections[connection_id]
+    
+    async def send_sse_response(self, connection_id, response):
+        """Send a response via SSE to a specific connection."""
+        if connection_id in self.sse_connections:
+            await self.sse_connections[connection_id](response)
     
     async def handle_request(self, request: dict) -> dict:
         """Handle an MCP request."""
@@ -302,7 +472,7 @@ class MCPHTTPServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.7"
+                            "version": "0.1.8"
                         }
                     }
                 }
@@ -339,8 +509,8 @@ class MCPHTTPServer:
                 }
             
             elif method == "notifications/initialized":
-                # No response needed for notifications
-                return None
+                # No response needed for notifications, return empty dict
+                return {}
             
             else:
                 return {
@@ -445,6 +615,44 @@ class MCPHTTPServer:
                 return {"error": "scenarios and decision_vars are required"}
             return solve_minimax_decision(scenarios, decision_vars, budget, objective)
         
+        elif tool_name == "solve_scipy_portfolio_optimization":
+            expected_returns = arguments.get("expected_returns")
+            covariance_matrix = arguments.get("covariance_matrix")
+            risk_tolerance = arguments.get("risk_tolerance", 1.0)
+            if expected_returns is None or covariance_matrix is None:
+                return {"error": "expected_returns and covariance_matrix are required"}
+            return solve_scipy_portfolio_optimization(expected_returns, covariance_matrix, risk_tolerance)
+        
+        elif tool_name == "solve_scipy_statistical_fitting":
+            data = arguments.get("data")
+            model = arguments.get("model", "linear")
+            if data is None:
+                return {"error": "data is required"}
+            return solve_scipy_statistical_fitting(data, model)
+        
+        elif tool_name == "solve_scipy_facility_location":
+            customer_locations = arguments.get("customer_locations")
+            customer_demands = arguments.get("customer_demands")
+            facility_locations = arguments.get("facility_locations")
+            max_facilities = arguments.get("max_facilities", 2)
+            fixed_cost = arguments.get("fixed_cost", 100.0)
+            if customer_locations is None or customer_demands is None or facility_locations is None:
+                return {"error": "customer_locations, customer_demands, and facility_locations are required"}
+            return solve_scipy_facility_location(customer_locations, customer_demands, facility_locations, max_facilities, fixed_cost)
+        
+        elif tool_name == "solve_24_point_game":
+            numbers = arguments.get("numbers")
+            if numbers is None:
+                return {"error": "numbers is required"}
+            return solve_24_point_game(numbers)
+        
+        elif tool_name == "solve_chicken_rabbit_problem":
+            total_heads = arguments.get("total_heads")
+            total_legs = arguments.get("total_legs")
+            if total_heads is None or total_legs is None:
+                return {"error": "total_heads and total_legs are required"}
+            return solve_chicken_rabbit_problem(total_heads, total_legs)
+        
         else:
             return {"error": f"Unknown tool: {tool_name}"}
 
@@ -458,11 +666,12 @@ async def root():
     """Root endpoint with server information."""
     return {
         "name": "Gurddy MCP HTTP Server",
-        "version": "0.1.7",
+        "version": "0.1.8",
         "protocol": "MCP over HTTP/SSE",
         "endpoints": {
             "sse": "/sse - Server-Sent Events endpoint for MCP communication",
             "message": "/message - POST endpoint for sending MCP messages",
+            "message_sse": "/message/sse/{connection_id} - POST endpoint for sending MCP messages via SSE",
             "rest_api": "/docs - REST API documentation (legacy)"
         }
     }
@@ -471,19 +680,62 @@ async def root():
 @app.get("/sse")
 async def sse_endpoint(request: Request):
     """SSE endpoint for MCP communication."""
+    # Generate a unique connection ID
+    connection_id = str(uuid.uuid4())
+    
+    # Create a queue for this connection
+    queue = asyncio.Queue()
+    
+    async def send_function(message):
+        """Function to send messages to this connection."""
+        await queue.put(message)
+    
+    # Add connection to server
+    mcp_server.add_sse_connection(connection_id, send_function)
+    
     async def event_generator():
-        # Send initial connection message
-        yield f"data: {json.dumps({'type': 'connection', 'status': 'connected'})}\n\n"
-        
-        # Keep connection alive and wait for messages
         try:
+            # Send initial connection message in standard JSON-RPC 2.0 format
+            connection_message = {
+                "jsonrpc": "2.0",
+                "method": "notifications/connection",
+                "params": {
+                    "connectionId": connection_id,
+                    "status": "connected",
+                    "serverInfo": {
+                        "name": "gurddy-mcp",
+                        "version": "0.1.8"
+                    }
+                }
+            }
+            yield f"data: {json.dumps(connection_message)}\n\n"
+            
+            # Send messages from the queue
             while True:
-                # In a real implementation, you would listen for messages from a queue
-                # For now, just keep the connection alive
-                await asyncio.sleep(30)
-                yield f": keepalive\n\n"
+                try:
+                    # Wait for a message with a timeout for keepalive
+                    message = await asyncio.wait_for(queue.get(), timeout=25.0)
+                    if message is None:
+                        break
+                    # Ensure all messages are in JSON-RPC 2.0 format
+                    if isinstance(message, dict) and "jsonrpc" in message:
+                        yield f"data: {json.dumps(message)}\n\n"
+                    else:
+                        # Convert to JSON-RPC 2.0 format if needed
+                        rpc_message = {
+                            "jsonrpc": "2.0",
+                            "method": "notifications/message",
+                            "params": message
+                        }
+                        yield f"data: {json.dumps(rpc_message)}\n\n"
+                except asyncio.TimeoutError:
+                    # Send SSE keepalive (not a JSON-RPC message)
+                    yield f": keepalive\n\n"
         except asyncio.CancelledError:
             pass
+        finally:
+            # Remove connection from server
+            mcp_server.remove_sse_connection(connection_id)
     
     return StreamingResponse(
         event_generator(),
@@ -499,10 +751,15 @@ async def sse_endpoint(request: Request):
 @app.post("/message")
 async def message_endpoint(request: Request):
     """POST endpoint for sending MCP messages."""
+    # Validate Origin header to prevent DNS rebinding attacks
+    if not validate_origin_header(request):
+        raise HTTPException(status_code=403, detail="Invalid Origin header")
+    
     try:
         body = await request.json()
         response = await mcp_server.handle_request(body)
-        return response if response is not None else {"status": "ok"}
+        # Return empty response for notifications
+        return response if response else {"status": "ok"}
     except Exception as e:
         return {
             "jsonrpc": "2.0",
@@ -512,6 +769,42 @@ async def message_endpoint(request: Request):
                 "message": f"Parse error: {str(e)}"
             }
         }
+
+
+@app.post("/message/sse/{connection_id}")
+async def message_sse_endpoint(connection_id: str, request: Request):
+    """POST endpoint for sending MCP messages via SSE."""
+    # Validate Origin header to prevent DNS rebinding attacks
+    if not validate_origin_header(request):
+        raise HTTPException(status_code=403, detail="Invalid Origin header")
+    
+    try:
+        body = await request.json()
+        # Handle the request using the MCP server
+        response = await mcp_server.handle_request(body)
+        
+        # Send response via SSE if connection exists
+        if response and connection_id in mcp_server.sse_connections:
+            await mcp_server.send_sse_response(connection_id, response)
+            return {"status": "sent via SSE"}
+        elif response:
+            return response
+        else:
+            return {"status": "ok"}
+    except Exception as e:
+        error_response = {
+            "jsonrpc": "2.0",
+            "id": None,
+            "error": {
+                "code": -32700,
+                "message": f"Parse error: {str(e)}"
+            }
+        }
+        # Send error via SSE if connection exists
+        if connection_id in mcp_server.sse_connections:
+            await mcp_server.send_sse_response(connection_id, error_response)
+            return {"status": "error sent via SSE"}
+        return error_response
 
 
 @app.get("/health")

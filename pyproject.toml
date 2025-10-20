@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gurddy_mcp"
-version = "0.1.7"
+version = "0.1.8"
 description = "MCP (Model Context Protocol) server for Gurddy optimization library - CSP, LP, and SciPy integration for advanced optimization"
 readme = "README.md"
 license = {text = "MIT"}

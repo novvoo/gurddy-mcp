@@ -162,7 +162,7 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
   "mcpServers": {
     "gurddy": {
       "command": "uvx",
-      "args": ["gurddy-mcp==0.1.7"],
+      "args": ["gurddy-mcp==0.1.8"],
       "env": {},
       "disabled": false,
       "autoApprove": [

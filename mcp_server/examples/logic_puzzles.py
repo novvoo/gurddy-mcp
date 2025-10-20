@@ -5,6 +5,7 @@ Solve various logic puzzles including Zebra puzzle, Einstein's riddle, etc.
 """
 
 import gurddy
+from typing import Dict, Any, Optional
 
 def solve_zebra_puzzle():
     """
@@ -167,29 +168,19 @@ def print_zebra_solution(solution, vars_dict):
     
     # Collect all attributes for each house
     for var_name, house in solution.items():
-        if var_name.startswith('color_'):
-            houses_info[house].append(('Color', var_name[6:]))
-        elif var_name.startswith('nat_'):
-            houses_info[house].append(('Nationality', var_name[4:]))
-        elif var_name.startswith('drink_'):
-            houses_info[house].append(('Drink', var_name[6:]))
-        elif var_name.startswith('pet_'):
-            houses_info[house].append(('Pet', var_name[4:]))
-        elif var_name.startswith('cig_'):
-            houses_info[house].append(('Cigarette', var_name[4:]))
-    
-    # Collect all attributes for each house
-    for var_name, house in solution.items():
-        if var_name.startswith('color_'):
-            houses_info[house].append(('Color', var_name[6:]))
-        elif var_name.startswith('nat_'):
-            houses_info[house].append(('Nationality', var_name[4:]))
-        elif var_name.startswith('drink_'):
-            houses_info[house].append(('Drink', var_name[6:]))
-        elif var_name.startswith('pet_'):
-            houses_info[house].append(('Pet', var_name[4:]))
-        elif var_name.startswith('cig_'):
-            houses_info[house].append(('Cigarette', var_name[4:]))
+        # Handle potential Unknown type from gurddy solver
+        house_value = int(house) if house is not None else 0
+        var_name_str = str(var_name)  # Ensure var_name is string
+        if var_name_str.startswith('color_'):
+            houses_info[house_value].append(('Color', var_name_str[6:]))
+        elif var_name_str.startswith('nat_'):
+            houses_info[house_value].append(('Nationality', var_name_str[4:]))
+        elif var_name_str.startswith('drink_'):
+            houses_info[house_value].append(('Drink', var_name_str[6:]))
+        elif var_name_str.startswith('pet_'):
+            houses_info[house_value].append(('Pet', var_name_str[4:]))
+        elif var_name_str.startswith('cig_'):
+            houses_info[house_value].append(('Cigarette', var_name_str[4:]))
     
     # Print house by house
     for house in range(1, 6):
@@ -199,18 +190,20 @@ def print_zebra_solution(solution, vars_dict):
             print(f"  {attr_type:12}: {attr_value}")
     
     # Answer the questions
-    zebra_house = solution['pet_Zebra']
-    water_house = solution['drink_Water']
+    zebra_house = int(solution['pet_Zebra']) if solution['pet_Zebra'] is not None else 0
+    water_house = int(solution['drink_Water']) if solution['drink_Water'] is not None else 0
     
     # Find nationalities
     zebra_owner = None
     water_drinker = None
     for var_name, house in solution.items():
-        if var_name.startswith('nat_'):
-            if house == zebra_house:
-                zebra_owner = var_name[4:]
-            if house == water_house:
-                water_drinker = var_name[4:]
+        var_name_str = str(var_name)  # Ensure var_name is string
+        house_value = int(house) if house is not None else 0
+        if var_name_str.startswith('nat_'):
+            if house_value == zebra_house:
+                zebra_owner = var_name_str[4:]
+            if house_value == water_house:
+                water_drinker = var_name_str[4:]
     
     print(f"\n" + "="*60)
     print("ANSWERS:")
@@ -283,17 +276,22 @@ def solve_simple_logic_puzzle():
         positions = {1: 'Position 1', 2: 'Position 2', 3: 'Position 3'}
         
         # Create position mapping
-        pos_info = {1: {'person': None, 'pet': None, 'color': None},
-                    2: {'person': None, 'pet': None, 'color': None},
-                    3: {'person': None, 'pet': None, 'color': None}}
+        pos_info: Dict[int, Dict[str, Optional[str]]] = {
+            1: {'person': None, 'pet': None, 'color': None},
+            2: {'person': None, 'pet': None, 'color': None},
+            3: {'person': None, 'pet': None, 'color': None}
+        }
         
         for var_name, pos in solution.items():
-            if var_name.startswith('person_'):
-                pos_info[pos]['person'] = var_name[7:]
-            elif var_name.startswith('pet_'):
-                pos_info[pos]['pet'] = var_name[4:]
-            elif var_name.startswith('color_'):
-                pos_info[pos]['color'] = var_name[6:]
+            # Handle potential Unknown type from gurddy solver
+            pos_value = int(pos) if pos is not None else 0
+            var_name_str = str(var_name)  # Ensure var_name is string
+            if var_name_str.startswith('person_'):
+                pos_info[pos_value]['person'] = var_name_str[7:]
+            elif var_name_str.startswith('pet_'):
+                pos_info[pos_value]['pet'] = var_name_str[4:]
+            elif var_name_str.startswith('color_'):
+                pos_info[pos_value]['color'] = var_name_str[6:]
         
         for pos in [1, 2, 3]:
             info = pos_info[pos]

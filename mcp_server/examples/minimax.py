@@ -32,13 +32,14 @@ def example_rock_paper_scissors():
     print_section("Example 1: Rock-Paper-Scissors Game")
     
     # Payoff matrix: rows = [Rock, Paper, Scissors], cols = [Rock, Paper, Scissors]
+    # Convert to float to match expected type List[List[float]]
     payoff_matrix = [
-        [0, -1, 1],   # Rock vs [Rock, Paper, Scissors]
-        [1, 0, -1],   # Paper vs [Rock, Paper, Scissors]
-        [-1, 1, 0]    # Scissors vs [Rock, Paper, Scissors]
+        [0.0, -1.0, 1.0],   # Rock vs [Rock, Paper, Scissors]
+        [1.0, 0.0, -1.0],   # Paper vs [Rock, Paper, Scissors]
+        [-1.0, 1.0, 0.0]    # Scissors vs [Rock, Paper, Scissors]
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     
     # Solve for row player (maximizer)
     result_row = solver.solve_game_matrix(payoff_matrix, player="row")
@@ -68,12 +69,13 @@ def example_matching_pennies():
     print_section("Example 2: Matching Pennies Game")
     
     # Payoff matrix: rows = [Heads, Tails], cols = [Heads, Tails]
+    # Convert to float to match expected type List[List[float]]
     payoff_matrix = [
-        [1, -1],   # Player 1 Heads vs [Heads, Tails]
-        [-1, 1]    # Player 1 Tails vs [Heads, Tails]
+        [1.0, -1.0],   # Player 1 Heads vs [Heads, Tails]
+        [-1.0, 1.0]    # Player 1 Tails vs [Heads, Tails]
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     
     result_row = solver.solve_game_matrix(payoff_matrix, player="row")
     print("\nPlayer 1 (Matcher) Strategy:")
@@ -106,13 +108,14 @@ def example_portfolio_optimization():
     print("  Stable:       A=0.05, B=0.03, C=-0.01 (small movements)")
     
     # Scenarios: loss coefficients for each asset
+    # Convert to float to match expected type List[Dict[str, float]]
     scenarios = [
         {"A": -0.2, "B": -0.1, "C": 0.05},   # Bull market (negative = gain)
         {"A": 0.3, "B": 0.2, "C": -0.02},    # Bear market
         {"A": 0.05, "B": 0.03, "C": -0.01}   # Stable market
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     result = solver.solve_minimax_decision(scenarios, ["A", "B", "C"], budget=100)
     
     print("\nOptimal Allocation (minimize maximum loss):")
@@ -146,13 +149,14 @@ def example_production_planning():
     print("  Low Demand:    X=$20, Y=$25")
     
     # Scenarios: profit coefficients (negative because we're maximizing)
+    # Convert to float to match expected type List[Dict[str, float]]
     scenarios = [
-        {"X": -50, "Y": -40},   # High demand (negative for maximin)
-        {"X": -30, "Y": -35},   # Medium demand
-        {"X": -20, "Y": -25}    # Low demand
+        {"X": -50.0, "Y": -40.0},   # High demand (negative for maximin)
+        {"X": -30.0, "Y": -35.0},   # Medium demand
+        {"X": -20.0, "Y": -25.0}    # Low demand
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     result = solver.solve_maximin_decision(scenarios, ["X", "Y"], budget=100)
     
     print("\nOptimal Production (maximize minimum profit):")
@@ -189,12 +193,13 @@ def example_battle_of_sexes():
     print("But have different preferences for activities")
     
     # Payoff matrix (Player 1's payoff): rows = [Opera, Football], cols = [Opera, Football]
+    # Convert to float to match expected type List[List[float]]
     payoff_matrix = [
-        [2, 0],    # Player 1 chooses Opera: (both Opera=2, split=0)
-        [0, 1]     # Player 1 chooses Football: (split=0, both Football=1)
+        [2.0, 0.0],    # Player 1 chooses Opera: (both Opera=2, split=0)
+        [0.0, 1.0]     # Player 1 chooses Football: (split=0, both Football=1)
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     
     result_row = solver.solve_game_matrix(payoff_matrix, player="row")
     print("\nPlayer 1 (prefers Opera) Mixed Strategy:")
@@ -228,17 +233,18 @@ def example_security_game():
     # Simplified: Defender chooses protection level, Attacker chooses target
     # Payoff = defender's loss (negative values)
     # Rows = defender strategies, Cols = attacker targets
+    # Convert to float to match expected type List[List[float]]
     payoff_matrix = [
-        [-10, -6, -3],      # No protection
-        [-2, -6, -3],       # Protect Target 1
-        [-10, -1, -3],      # Protect Target 2
-        [-10, -6, -0.5],    # Protect Target 3
-        [-2, -1, -3],       # Protect Targets 1&2
-        [-2, -6, -0.5],     # Protect Targets 1&3
-        [-10, -1, -0.5]     # Protect Targets 2&3
+        [-10.0, -6.0, -3.0],      # No protection
+        [-2.0, -6.0, -3.0],       # Protect Target 1
+        [-10.0, -1.0, -3.0],      # Protect Target 2
+        [-10.0, -6.0, -0.5],      # Protect Target 3
+        [-2.0, -1.0, -3.0],       # Protect Targets 1&2
+        [-2.0, -6.0, -0.5],       # Protect Targets 1&3
+        [-10.0, -1.0, -0.5]       # Protect Targets 2&3
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     
     result_row = solver.solve_game_matrix(payoff_matrix, player="row")
     print("\nDefender's Optimal Mixed Strategy:")
@@ -273,13 +279,14 @@ def example_advertising_competition():
     print("  Cols: Company B strategies [Low, Medium, High]")
     
     # Payoff matrix: Company A's market share change
+    # Convert to float to match expected type List[List[float]]
     payoff_matrix = [
-        [0, -5, -10],    # A: Low budget
-        [5, 0, -3],      # A: Medium budget
-        [10, 3, 0]       # A: High budget
+        [0.0, -5.0, -10.0],    # A: Low budget
+        [5.0, 0.0, -3.0],      # A: Medium budget
+        [10.0, 3.0, 0.0]       # A: High budget
     ]
     
-    solver = MinimaxSolver(None)
+    solver = MinimaxSolver(None)  # type: ignore
     
     result_row = solver.solve_game_matrix(payoff_matrix, player="row")
     print("\nCompany A's Optimal Strategy:")

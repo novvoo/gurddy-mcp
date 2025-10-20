@@ -7,7 +7,7 @@ import json
 import requests
 
 
-def call_mcp_tool(base_url: str, tool_name: str, arguments: dict = None) -> dict:
+def call_mcp_tool(base_url: str, tool_name: str, arguments: dict | None = None) -> dict:
     """Call an MCP tool via HTTP."""
     if arguments is None:
         arguments = {}

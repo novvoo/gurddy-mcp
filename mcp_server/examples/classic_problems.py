@@ -102,29 +102,30 @@ def solve_chicken_rabbit_problem(total_heads: int, total_legs: int) -> Optional[
     print(f"总腿数: {total_legs}")
     print("约束: 鸡有1个头2条腿，兔有1个头4条腿")
     
-    # 使用Gurddy的线性规划求解器
-    model = gurddy.Model("鸡兔同笼", "LP")
+    # 使用PuLP的线性规划求解器
+    import pulp
+    model = pulp.LpProblem("鸡兔同笼", pulp.LpMinimize)
     
     # 变量：鸡的数量和兔的数量
-    chickens = model.addVar("鸡", low_bound=0, cat='Integer')
-    rabbits = model.addVar("兔", low_bound=0, cat='Integer')
+    chickens = pulp.LpVariable("鸡", lowBound=0, cat='Integer')
+    rabbits = pulp.LpVariable("兔", lowBound=0, cat='Integer')
     
     # 约束条件
     # 头数约束：鸡数 + 兔数 = 总头数
-    model.addConstraint(chickens + rabbits == total_heads, name='头数约束')
+    model += (chickens + rabbits == total_heads), '头数约束'
     
     # 腿数约束：2*鸡数 + 4*兔数 = 总腿数
-    model.addConstraint(chickens * 2 + rabbits * 4 == total_legs, name='腿数约束')
+    model += (chickens * 2 + rabbits * 4 == total_legs), '腿数约束'
     
     # 目标函数（任意，因为这是可行性问题）
-    model.setObjective(chickens + rabbits, sense='Minimize')
+    model += chickens + rabbits
     
     # 求解
-    solution = model.solve()
+    model.solve()
     
-    if solution:
-        chicken_count = int(solution['鸡'])
-        rabbit_count = int(solution['兔'])
+    if pulp.LpStatus[model.status] == 'Optimal':
+        chicken_count = int(chickens.varValue) if chickens.varValue is not None else 0
+        rabbit_count = int(rabbits.varValue) if rabbits.varValue is not None else 0
         
         print(f"\n✓ 解:")
         print(f"  鸡的数量: {chicken_count}")
@@ -290,33 +291,34 @@ def solve_knapsack_problem(weights: List[int], values: List[int], capacity: int)
     print(f"背包容量: {capacity}")
     
     n = len(weights)
-    model = gurddy.Model("背包问题", "LP")
+    import pulp
+    model = pulp.LpProblem("背包问题", pulp.LpMaximize)
     
     # 变量：每个物品是否选择（0或1）
     items = []
     for i in range(n):
-        item = model.addVar(f"item_{i}", low_bound=0, up_bound=1, cat='Binary')
+        item = pulp.LpVariable(f"item_{i}", lowBound=0, upBound=1, cat='Binary')
         items.append(item)
     
     # 约束：重量不超过容量
     total_weight = sum(items[i] * weights[i] for i in range(n))
-    model.addConstraint(total_weight <= capacity, name='容量约束')
+    model += (total_weight <= capacity), '容量约束'
     
     # 目标：最大化价值
     total_value = sum(items[i] * values[i] for i in range(n))
-    model.setObjective(total_value, sense='Maximize')
+    model += total_value
     
     # 求解
-    solution = model.solve()
+    model.solve()
     
-    if solution:
+    if pulp.LpStatus[model.status] == 'Optimal':
         selected_items = []
         total_weight_used = 0
         total_value_gained = 0
         
         print(f"\n✓ 解:")
         for i in range(n):
-            if solution[f"item_{i}"] > 0.5:  # 二进制变量
+            if items[i].varValue is not None and items[i].varValue > 0.5:  # 二进制变量
                 selected_items.append(i)
                 total_weight_used += weights[i]
                 total_value_gained += values[i]

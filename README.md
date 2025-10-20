@@ -122,7 +122,12 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
         "solve_lp",
         "solve_production_planning",
         "solve_minimax_game",
-        "solve_minimax_decision"
+        "solve_minimax_decision",
+        "solve_24_point_game",
+        "solve_chicken_rabbit_problem",
+        "solve_scipy_portfolio_optimization",
+        "solve_scipy_statistical_fitting",
+        "solve_scipy_facility_location"
       ]
     }
   }
@@ -141,7 +146,10 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
       "autoApprove": [
         "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
         "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
-        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision",
+        "solve_24_point_game", "solve_chicken_rabbit_problem", 
+        "solve_scipy_portfolio_optimization", "solve_scipy_statistical_fitting", 
+        "solve_scipy_facility_location"
       ]
     }
   }
@@ -154,13 +162,16 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
   "mcpServers": {
     "gurddy": {
       "command": "uvx",
-      "args": ["gurddy-mcp==0.1.6"],
+      "args": ["gurddy-mcp==0.1.7"],
       "env": {},
       "disabled": false,
       "autoApprove": [
         "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
         "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
-        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision",
+        "solve_24_point_game", "solve_chicken_rabbit_problem", 
+        "solve_scipy_portfolio_optimization", "solve_scipy_statistical_fitting", 
+        "solve_scipy_facility_location"
       ]
     }
   }
@@ -200,14 +211,17 @@ If you've already installed `gurddy-mcp` via pip:
       "autoApprove": [
         "run_example", "info", "install", "solve_n_queens", "solve_sudoku", 
         "solve_graph_coloring", "solve_map_coloring", "solve_lp", 
-        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision"
+        "solve_production_planning", "solve_minimax_game", "solve_minimax_decision",
+        "solve_24_point_game", "solve_chicken_rabbit_problem", 
+        "solve_scipy_portfolio_optimization", "solve_scipy_statistical_fitting", 
+        "solve_scipy_facility_location"
       ]
     }
   }
 }
 ```
 
-Available MCP tools (13 total):
+Available MCP tools (16 total):
 - `info` - Get gurddy MCP server information and capabilities
 - `install` - Install or upgrade the gurddy package
 - `run_example` - Run example programs (n_queens, graph_coloring, minimax, scipy_optimization, classic_problems, etc.)
@@ -219,6 +233,11 @@ Available MCP tools (13 total):
 - `solve_production_planning` - Production optimization with optional sensitivity analysis
 - `solve_minimax_game` - Two-player zero-sum games (find Nash equilibria)
 - `solve_minimax_decision` - Robust optimization (minimize max loss or maximize min gain)
+- `solve_24_point_game` - Solve 24-point game with four numbers using arithmetic operations
+- `solve_chicken_rabbit_problem` - Solve classic chicken-rabbit problem with heads and legs constraints
+- `solve_scipy_portfolio_optimization` - Solve nonlinear portfolio optimization using SciPy
+- `solve_scipy_statistical_fitting` - Solve statistical parameter estimation using SciPy
+- `solve_scipy_facility_location` - Solve facility location problem using hybrid CSP-SciPy approach
 
 Test the MCP server:
 ```bash
@@ -227,6 +246,32 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 # Test listing tools
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | gurddy-mcp
+
+# Test info tools
+echo '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"info","arguments":{"":""}}}' | gurddy-mcp |jq 
+
+# Test run example tools
+echo '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"run_example","arguments":{"example":"n_queens"}}}' | gurddy-mcp |jq
+
+# Test sudoku tools
+cat <<EOF | tr -d '\n'|gurddy-mcp|jq
+{"jsonrpc":"2.0","id":123,"method":"tools/call","params":{
+  "name":"solve_sudoku",
+  "arguments":{
+    "puzzle":[
+      [5,3,0,0,7,0,0,0,0],
+      [6,0,0,1,9,5,0,0,0],
+      [0,9,8,0,0,0,0,6,0],
+      [8,0,0,0,6,0,0,0,3],
+      [4,0,0,8,0,3,0,0,1],
+      [7,0,0,0,2,0,0,0,6],
+      [0,6,0,0,0,0,2,8,0],
+      [0,0,0,4,1,9,0,0,5],
+      [0,0,0,0,8,0,0,7,9]
+    ]
+  }
+}}
+EOF
 ```
 
 ### 2. MCP HTTP Server
@@ -437,6 +482,78 @@ Solve a minimax decision problem under uncertainty (robust optimization).
 ```
 Objectives: `minimize_max_loss` (robust portfolio) or `maximize_min_gain` (conservative production)
 
+### solve_24_point_game
+Solve the 24-point game with four numbers using arithmetic operations.
+```json
+{
+  "name": "solve_24_point_game",
+  "arguments": {
+    "numbers": [1, 2, 3, 4]
+  }
+}
+```
+Finds arithmetic expressions using +, -, *, / and parentheses to reach exactly 24.
+
+### solve_chicken_rabbit_problem
+Solve the classic chicken-rabbit problem with heads and legs constraints.
+```json
+{
+  "name": "solve_chicken_rabbit_problem",
+  "arguments": {
+    "total_heads": 35,
+    "total_legs": 94
+  }
+}
+```
+Determines the number of chickens (2 legs) and rabbits (4 legs) given total heads and legs.
+
+### solve_scipy_portfolio_optimization
+Solve nonlinear portfolio optimization using SciPy with quadratic risk models.
+```json
+{
+  "name": "solve_scipy_portfolio_optimization",
+  "arguments": {
+    "expected_returns": [0.12, 0.18, 0.15],
+    "covariance_matrix": [
+      [0.04, 0.01, 0.02],
+      [0.01, 0.09, 0.03],
+      [0.02, 0.03, 0.06]
+    ],
+    "risk_tolerance": 1.0
+  }
+}
+```
+Optimizes portfolio weights to maximize return minus risk penalty using mean-variance optimization.
+
+### solve_scipy_statistical_fitting
+Solve statistical parameter estimation using SciPy with distribution fitting.
+```json
+{
+  "name": "solve_scipy_statistical_fitting",
+  "arguments": {
+    "data": [1.2, 2.3, 1.8, 2.1, 1.9, 2.4, 1.7, 2.0],
+    "distribution": "normal"
+  }
+}
+```
+Fits statistical distributions ("normal", "exponential", "uniform") to data and provides goodness-of-fit tests.
+
+### solve_scipy_facility_location
+Solve facility location problem using hybrid CSP-SciPy approach.
+```json
+{
+  "name": "solve_scipy_facility_location",
+  "arguments": {
+    "customer_locations": [[0, 0], [10, 10], [5, 15]],
+    "customer_demands": [100, 150, 80],
+    "facility_locations": [[2, 3], [8, 12], [6, 8]],
+    "max_facilities": 2,
+    "fixed_cost": 100.0
+  }
+}
+```
+Combines discrete facility selection (CSP) with continuous capacity optimization (SciPy) to minimize total cost.
+
 ## Docker Deployment
 
 ### Build and Run
@@ -481,7 +598,10 @@ POST /solve-n-queens
 ```
 mcp_server/
 ├── handlers/
-│   └── gurddy.py           # Core solver implementation
+│   └── gurddy.py           # Core solver implementation (16 MCP tools)
+│                          # - solve_24_point_game, solve_chicken_rabbit_problem
+│                          # - solve_scipy_portfolio_optimization, solve_scipy_statistical_fitting
+│                          # - solve_scipy_facility_location, and 11 other solvers
 ├── tools/                  # MCP tool wrappers
 ├── examples/               # Rich Problem Examples
 │   ├── n_queens.py         # N-Queens Problem
@@ -490,7 +610,12 @@ mcp_server/
 │   ├── logic_puzzles.py    # Logic Puzzles
 │   ├── scheduling.py       # Scheduling Problem
 │   ├── scipy_optimization.py # SciPy Integration Examples
-│   └── classic_problems.py # Classic Math Problems
+│   │                      # - Portfolio optimization, statistical fitting, facility location
+│   ├── classic_problems.py # Classic Math Problems
+│   │                      # - 24-point game, chicken-rabbit problem, mini sudoku
+│   ├── optimized_csp.py    # Advanced CSP techniques
+│   ├── optimized_lp.py     # Linear programming examples
+│   └── minimax.py          # Game theory and robust optimization
 ├── mcp_stdio_server.py     # MCP Stdio Server (for IDE integration)
 └── mcp_http_server.py      # MCP HTTP Server (for web clients)
 
@@ -707,12 +832,28 @@ Run examples directly for debugging:
 # After installing gurddy_mcp
 python -c "from mcp_server.examples import n_queens; n_queens.main()"
 
-# Or from source
+# Or from source - CSP examples
 python mcp_server/examples/n_queens.py
 python mcp_server/examples/graph_coloring.py
 python mcp_server/examples/logic_puzzles.py
+python mcp_server/examples/optimized_csp.py
+
+# LP and optimization examples
+python mcp_server/examples/optimized_lp.py
+
+# Game theory and minimax examples
+python mcp_server/examples/minimax.py
+
+# SciPy integration examples (includes portfolio, statistical fitting, facility location)
 python mcp_server/examples/scipy_optimization.py
+
+# Classic math problems (includes 24-point game, chicken-rabbit problem)
 python mcp_server/examples/classic_problems.py
+
+# Test individual MCP tools directly
+python -c "from mcp_server.handlers.gurddy import solve_24_point_game; print(solve_24_point_game([1,2,3,4]))"
+python -c "from mcp_server.handlers.gurddy import solve_chicken_rabbit_problem; print(solve_chicken_rabbit_problem(35, 94))"
+python -c "from mcp_server.handlers.gurddy import solve_scipy_portfolio_optimization; print(solve_scipy_portfolio_optimization([0.12, 0.18], [[0.04, 0.01], [0.01, 0.09]]))"
 ```
 
 ### SciPy Integration Requirements

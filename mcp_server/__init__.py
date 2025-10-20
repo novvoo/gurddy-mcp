@@ -29,7 +29,7 @@ Usage:
     result = solve_minimax_game([[0, -1, 1], [1, 0, -1], [-1, 1, 0]], player="row")
 """
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Gurddy MCP Team"
 __email__ = "contact@example.com"
 

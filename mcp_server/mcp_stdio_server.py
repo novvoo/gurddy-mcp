@@ -407,7 +407,7 @@ class MCPStdioServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.6"
+                            "version": "0.1.7"
                         }
                     }
                 }

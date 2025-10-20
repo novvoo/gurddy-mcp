@@ -38,7 +38,7 @@ from mcp_server.handlers.gurddy import (
 app = FastAPI(
     title="Gurddy MCP HTTP Server",
     description="MCP server for Gurddy optimization library via HTTP/SSE",
-    version="0.1.6"
+    version="0.1.7"
 )
 
 # Enable CORS for browser access
@@ -302,7 +302,7 @@ class MCPHTTPServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.6"
+                            "version": "0.1.7"
                         }
                     }
                 }
@@ -458,7 +458,7 @@ async def root():
     """Root endpoint with server information."""
     return {
         "name": "Gurddy MCP HTTP Server",
-        "version": "0.1.6",
+        "version": "0.1.7",
         "protocol": "MCP over HTTP/SSE",
         "endpoints": {
             "sse": "/sse - Server-Sent Events endpoint for MCP communication",

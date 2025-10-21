@@ -33,31 +33,29 @@ __version__ = "0.1.8"
 __author__ = "Gurddy MCP Team"
 __email__ = "contact@example.com"
 
-# Import main components for easy access
-from mcp_server.handlers.gurddy import (
-    solve_n_queens,
-    solve_graph_coloring,
-    solve_map_coloring,
-    solve_sudoku,
-    solve_lp,
-    solve_csp_generic,
-    solve_production_planning,
-    solve_minimax_game,
-    solve_minimax_decision,
-    info,
-    run_example,
-)
+# Import tool registry for centralized tool management
+from mcp_server.tool_registry import TOOLS, TOOL_COUNT
+import importlib
 
-__all__ = [
-    "solve_n_queens",
-    "solve_graph_coloring", 
-    "solve_map_coloring",
-    "solve_sudoku",
-    "solve_lp",
-    "solve_csp_generic",
-    "solve_production_planning",
-    "solve_minimax_game",
-    "solve_minimax_decision",
-    "info",
-    "run_example",
-]
+# Dynamically import all registered functions from their respective modules
+__all__ = []
+for tool in TOOLS:
+    func_name = tool["function"]
+    module_path = f"mcp_server.{tool['module']}"
+    
+    try:
+        module = importlib.import_module(module_path)
+        if hasattr(module, func_name):
+            globals()[func_name] = getattr(module, func_name)
+            __all__.append(func_name)
+    except ImportError:
+        pass  # Skip if module doesn't exist
+
+# Add solve_csp_generic if it exists (not in registry but useful)
+try:
+    _handler_module = importlib.import_module("mcp_server.handlers.gurddy")
+    if hasattr(_handler_module, "solve_csp_generic"):
+        solve_csp_generic = getattr(_handler_module, "solve_csp_generic")
+        __all__.append("solve_csp_generic")
+except ImportError:
+    pass

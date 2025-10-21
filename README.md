@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-gurddy--mcp.fly.dev-blue)](https://gurddy-mcp.fly.dev)
 
-A comprehensive Model Context Protocol (MCP) server for solving Constraint Satisfaction Problems (CSP), Linear Programming (LP), Minimax optimization, and SciPy-powered advanced optimization problems. Built on the `gurddy` optimization library with SciPy integration, it supports solving various classic problems through two MCP transports: stdio (for IDE integration) and HTTP/SSE (for web clients).
+A comprehensive Model Context Protocol (MCP) server for solving Constraint Satisfaction Problems (CSP), Linear Programming (LP), Minimax optimization, and SciPy-powered advanced optimization problems. Built on the `gurddy` optimization library with SciPy integration, it supports solving various classic problems through two MCP transports: stdio (for IDE integration) and streamable HTTP (for web clients).
 
 **🚀 Quick Start (Stdio):** `pip install gurddy_mcp` then configure in your IDE
 
@@ -57,7 +57,7 @@ A comprehensive Model Context Protocol (MCP) server for solving Constraint Satis
 
 ### 🔌 MCP Protocol Support
 - **Stdio Transport**: Local IDE integration (Kiro, Claude Desktop, Cline, etc.)
-- **HTTP/SSE Transport**: Web clients and remote access
+- **Streamable HTTP Transport**: Web clients and remote access with optional streaming
 - **Unified Interface**: Same tools across both transports
 - **JSON-RPC 2.0**: Full protocol compliance
 - **Auto-approval**: Configure trusted tools for seamless execution
@@ -276,7 +276,7 @@ EOF
 
 ### 2. MCP HTTP Server
 
-Start the HTTP MCP server (MCP protocol over HTTP/SSE):
+Start the HTTP MCP server (MCP protocol over streamable HTTP):
 
 **Local Development:**
 ```bash
@@ -295,24 +295,50 @@ docker run -p 8080:8080 gurddy-mcp
 **Access the server:**
 - Root: http://127.0.0.1:8080/
 - Health check: http://127.0.0.1:8080/health
-- SSE endpoint: http://127.0.0.1:8080/sse
-- Message endpoint: http://127.0.0.1:8080/message (POST)
+- HTTP transport: http://127.0.0.1:8080/mcp/http (POST - supports both regular and streaming)
 
 **Test the HTTP MCP server:**
+
+**HTTP Transport (non-streaming):**
 ```bash
 # List available tools
-curl -X POST http://127.0.0.1:8080/message \
+curl -X POST http://127.0.0.1:8080/mcp/http \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 
 # Call a tool
-curl -X POST http://127.0.0.1:8080/message \
+curl -X POST http://127.0.0.1:8080/mcp/http \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"info","arguments":{}}}'
 ```
 
+**HTTP Transport (streaming with Accept header):**
+```bash
+# List tools with streaming response
+curl -X POST http://127.0.0.1:8080/mcp/http \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# Call a tool with streaming response
+curl -X POST http://127.0.0.1:8080/mcp/http \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"solve_n_queens","arguments":{"n":4}}}'
+```
+
+**HTTP Transport (streaming with X-Stream header):**
+```bash
+# Alternative way to enable streaming
+curl -X POST http://127.0.0.1:8080/mcp/http \
+  -H "Content-Type: application/json" \
+  -H "X-Stream: true" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"info","arguments":{}}}'
+```
+
 **Python Client Example:**
-See `examples/http_mcp_client.py` for a complete example of how to interact with the HTTP MCP server.
+- `examples/streamable_http_client.py` - HTTP transport client with streaming examples
+
 
 ## MCP Tools
 
@@ -630,9 +656,19 @@ Dockerfile                  # Docker configuration for HTTP server
 | Transport | Command | Protocol | Use Case |
 |-----------|---------|----------|----------|
 | **Stdio** | `gurddy-mcp` | MCP over stdin/stdout | IDE integration (Kiro, Claude Desktop, etc.) |
-| **HTTP** | `uvicorn mcp_server.mcp_http_server:app` | MCP over HTTP/SSE | Web clients, remote access, Docker deployment |
+| **Streamable HTTP** | `uvicorn mcp_server.mcp_http_server:app` | MCP over HTTP with optional streaming | Web clients, remote access, Docker deployment |
 
-Both transports implement the same MCP protocol and provide identical tools.
+All transports implement the same MCP protocol and provide identical tools.
+
+### HTTP Transport Features
+
+**HTTP Transport** (`/mcp/http` endpoint):
+- Single request-response pattern
+- Optional streaming: Add `Accept: text/event-stream` or `X-Stream: true` header
+- Simpler for one-off requests
+- Compatible with standard HTTP clients
+- No connection state to manage
+- Supports both regular JSON responses and SSE-formatted streaming responses
 
 ## Example Output
 
@@ -873,20 +909,75 @@ python -c "import scipy.optimize, numpy; print('SciPy integration ready')"
 - **Hybrid CSP-SciPy**: Facility location combining discrete and continuous optimization
 - **Numerical Integration**: Complex optimization problems involving integrals
 
-## Extension Development
+## Development
 
-### Adding a New CSP Problem
-1. In `mcp_server/examples/` Create a problem implementation in `mcp_server/handlers/gurddy.py`
-2. Add the solver function in `mcp_server/handlers/gurddy.py`
-3. Add the API endpoint in `mcp_server/mcp_http_server.py`
+### Architecture
+
+The project uses a **centralized tool registry** to ensure consistency between stdio and HTTP servers:
+
+- **Single Source of Truth**: `mcp_server/tool_registry.py` defines all tools
+- **Stdio Server**: `mcp_server/mcp_stdio_server.py` (for IDE integration)
+- **HTTP Server**: `mcp_server/mcp_http_server.py` (for web clients)
+- **Handlers**: `mcp_server/handlers/gurddy.py` (tool implementations)
+
+
+### Adding a New Tool
+
+1. **Implement handler** in `mcp_server/handlers/gurddy.py`:
+   ```python
+   def my_new_tool(param1: str, param2: int = 10) -> Dict[str, Any]:
+       """Tool implementation."""
+       return {"result": "success"}
+   ```
+
+2. **Register in central registry** (`mcp_server/tool_registry.py`):
+   ```python
+   {
+       "name": "my_new_tool",
+       "function": "my_new_tool",
+       "description": "Description of what the tool does",
+       "category": "optimization",
+       "module": "handlers.gurddy",
+       "inputSchema": {
+           "type": "object",
+           "properties": {
+               "param1": {"type": "string", "description": "First parameter"},
+               "param2": {"type": "integer", "description": "Second parameter", "default": 10}
+           },
+           "required": ["param1"]
+       }
+   }
+   ```
+
+3. **Verify consistency**:
+   ```bash
+   python scripts/verify_consistency.py
+   pytest tests/test_consistency.py -v
+   ```
+
+That's it! Both stdio and HTTP servers will automatically pick up the new tool.
 
 ### Custom Constraints
 ```python
 # Define a custom constraint in gurddy
 def custom_constraint(var1, var2):
-return var1 + var2 <= 10
+    return var1 + var2 <= 10
 
 model.addConstraint(gurddy.FunctionConstraint(custom_constraint, (var1, var2)))
+```
+
+### Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test suites
+pytest tests/test_consistency.py -v
+pytest tests/test_tool_registry.py -v
+
+# Verify tool registry consistency
+python scripts/verify_consistency.py
 ```
 
 ## License

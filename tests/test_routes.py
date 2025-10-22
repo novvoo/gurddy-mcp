@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from mcp_server.mcp_http_server import app
+from mcp_server import __version__
 
 
 @pytest.fixture
@@ -22,7 +23,7 @@ class TestHealthRoutes:
         
         data = response.json()
         assert data["name"] == "Gurddy MCP HTTP Server"
-        assert data["version"] == "0.1.8"
+        assert data["version"] == __version__
         assert "transports" in data
         assert "http" in data["transports"]
     

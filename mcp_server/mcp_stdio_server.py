@@ -14,6 +14,7 @@ import inspect
 
 from mcp_server.tool_registry import TOOL_SCHEMAS, get_tool_by_name
 from mcp_server.handlers import gurddy
+from mcp_server import __version__
 
 
 class MCPStdioServer:
@@ -53,7 +54,7 @@ class MCPStdioServer:
                         },
                         "serverInfo": {
                             "name": "gurddy-mcp",
-                            "version": "0.1.8"
+                            "version": __version__
                         }
                     }
                 }

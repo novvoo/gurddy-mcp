@@ -29,7 +29,13 @@ Usage:
     result = solve_minimax_game([[0, -1, 1], [1, 0, -1], [-1, 1, 0]], player="row")
 """
 
-__version__ = "0.1.8"
+import importlib.metadata
+
+try:
+    __version__ = importlib.metadata.version("gurddy_mcp")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "0.0.0"  # Fallback for development
+
 __author__ = "Gurddy MCP Team"
 __email__ = "contact@example.com"
 

@@ -1,5 +1,6 @@
 """Health check and info routes."""
 from fastapi import APIRouter
+from mcp_server import __version__
 
 router = APIRouter(tags=["health"])
 
@@ -9,7 +10,7 @@ async def root():
     """Root endpoint with server information."""
     return {
         "name": "Gurddy MCP HTTP Server",
-        "version": "0.1.8",
+        "version": __version__,
         "protocol": "MCP over Streamable HTTP",
         "transports": {
             "http": {

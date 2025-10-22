@@ -162,7 +162,7 @@ Configure in `~/.kiro/settings/mcp.json` or `.kiro/settings/mcp.json`:
   "mcpServers": {
     "gurddy": {
       "command": "uvx",
-      "args": ["gurddy-mcp==0.1.8"],
+      "args": ["gurddy-mcp==<VERSION>"],
       "env": {},
       "disabled": false,
       "autoApprove": [
@@ -856,7 +856,7 @@ Typical execution times on standard hardware:
 ### Installation Issues
 ```bash
 # install individually
-pip install gurddy>=0.1.8 pulp>=2.6.0 scipy>=1.9.0 numpy>=1.21.0
+pip install gurddy pulp>=2.6.0 scipy>=1.9.0 numpy>=1.21.0
 
 # Check installation
 python -c "import gurddy, pulp, scipy, numpy; print('All dependencies installed')"

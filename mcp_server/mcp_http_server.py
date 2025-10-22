@@ -11,6 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from mcp_server.middleware import OriginValidatorMiddleware
 from mcp_server.routes import mcp_router, health_router
+from mcp_server import __version__
 
 # Import tools to register them
 import mcp_server.tools.registry  # noqa: F401
@@ -19,7 +20,7 @@ import mcp_server.tools.registry  # noqa: F401
 app = FastAPI(
     title="Gurddy MCP HTTP Server",
     description="MCP server for Gurddy optimization library via streamable HTTP",
-    version="0.1.8"
+    version=__version__
 )
 
 # Enable CORS for browser access

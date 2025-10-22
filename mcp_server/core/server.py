@@ -3,6 +3,7 @@ import json
 from typing import Dict
 
 from .tool_registry import get_registry
+from mcp_server import __version__
 
 
 class MCPHTTPServer:
@@ -63,7 +64,7 @@ class MCPHTTPServer:
                 },
                 "serverInfo": {
                     "name": "gurddy-mcp",
-                    "version": "0.1.8"
+                    "version": __version__
                 }
             }
         }

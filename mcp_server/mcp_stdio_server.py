@@ -91,7 +91,7 @@ class MCPStdioServer:
             
             elif method == "notifications/initialized":
                 # No response needed for notifications
-                return {"jsonrpc": "2.0", "id": request_id, "result": None}
+                return None
             
             else:
                 return {

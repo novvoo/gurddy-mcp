@@ -57,8 +57,10 @@ async def http_transport_endpoint(request: Request):
         else:
             # Regular non-streaming response
             response = await mcp_server.handle_request(body)
-            # Return empty response for notifications
-            return response if response else {"status": "ok"}
+            # Return empty response for notifications (when response is None)
+            if response is None:
+                return {"status": "ok"}
+            return response
     except Exception as e:
         return {
             "jsonrpc": "2.0",

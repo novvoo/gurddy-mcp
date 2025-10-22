@@ -29,7 +29,7 @@ class MCPHTTPServer:
             
             elif method == "notifications/initialized":
                 # No response needed for notifications
-                return {}
+                return None
             
             else:
                 return {

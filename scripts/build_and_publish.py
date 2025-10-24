@@ -27,6 +27,12 @@ def clean_build():
     run_command("rm -rf build/ dist/ *.egg-info/", check=False)
 
 
+def generate_schemas():
+    """Generate schemas from function signatures."""
+    print("Generating schemas from function signatures...")
+    return run_command("python generate_registry.py")
+
+
 def build_package():
     """Build the package."""
     print("Building package...")
@@ -84,6 +90,11 @@ def main():
     
     # Check dependencies
     if not check_dependencies():
+        sys.exit(1)
+    
+    # Generate schemas
+    if not generate_schemas():
+        print("Schema generation failed!")
         sys.exit(1)
     
     # Run tests

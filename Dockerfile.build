@@ -1,0 +1,42 @@
+# Multi-stage Dockerfile that uses pyproject.toml build hooks for complete build process
+# This is useful for production builds where you want the full build pipeline
+
+# Build stage
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel build pytest
+
+# Copy source code
+COPY . .
+
+# Run pre-build hooks (generate schemas and verify)
+RUN python scripts/build_hook.py
+
+# Run tests
+RUN python -m pytest tests/ -v
+
+# Build package
+RUN python -m build
+
+# Runtime stage
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copy built wheel from builder stage
+COPY --from=builder /app/dist/*.whl /tmp/
+
+# Install the built package
+RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl
+
+# Expose port for MCP HTTP server
+EXPOSE 8080
+
+# Default command: run MCP HTTP server
+CMD ["python", "-m", "uvicorn", "mcp_server.mcp_http_server:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gurddy_mcp"
-version = "0.1.9"
+version = "0.1.11"
 description = "MCP (Model Context Protocol) server for Gurddy optimization library - CSP, LP, and SciPy integration for advanced optimization"
 readme = "README.md"
 license = {text = "MIT"}
@@ -70,6 +70,7 @@ Documentation = "https://github.com/novvoo/gurddy-mcp#readme"
 
 [project.scripts]
 gurddy-mcp = "mcp_server.mcp_stdio_server:main"
+gurddy-mcp-build = "scripts.build_hook:main"
 
 [tool.setuptools.packages.find]
 include = ["mcp_server*"]
@@ -79,6 +80,11 @@ mcp_server = ["examples/*.py"]
 
 [tool.setuptools.dynamic]
 # Prevent setuptools from adding deprecated license-file field
+
+# Build process:
+# 1. Run pre-build hooks: python scripts/build_hook.py
+# 2. Build package: python -m build
+# Or use: make build (includes both steps)
 
 [tool.black]
 line-length = 88

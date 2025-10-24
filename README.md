@@ -913,49 +913,46 @@ python -c "import scipy.optimize, numpy; print('SciPy integration ready')"
 
 ### Architecture
 
-The project uses a **centralized tool registry** to ensure consistency between stdio and HTTP servers:
+The project uses a **centralized tool registry** with **auto-generated schemas** to ensure consistency between stdio and HTTP servers:
 
-- **Single Source of Truth**: `mcp_server/tool_registry.py` defines all tools
+- **Tool Definitions**: `mcp_server/tool_definitions.py` (basic metadata only)
+- **Auto-Generated Registry**: `mcp_server/tool_registry.py` (schemas generated from function signatures)
 - **Stdio Server**: `mcp_server/mcp_stdio_server.py` (for IDE integration)
 - **HTTP Server**: `mcp_server/mcp_http_server.py` (for web clients)
 - **Handlers**: `mcp_server/handlers/gurddy.py` (tool implementations)
-
+- **Schema Generator**: `scripts/generate_registry.py` (auto-generates schemas from function signatures)
 
 ### Adding a New Tool
 
 1. **Implement handler** in `mcp_server/handlers/gurddy.py`:
    ```python
    def my_new_tool(param1: str, param2: int = 10) -> Dict[str, Any]:
-       """Tool implementation."""
+       """Tool implementation with proper type hints."""
        return {"result": "success"}
    ```
 
-2. **Register in central registry** (`mcp_server/tool_registry.py`):
+2. **Add basic metadata** in `mcp_server/tool_definitions.py`:
    ```python
    {
        "name": "my_new_tool",
        "function": "my_new_tool",
        "description": "Description of what the tool does",
        "category": "optimization",
-       "module": "handlers.gurddy",
-       "inputSchema": {
-           "type": "object",
-           "properties": {
-               "param1": {"type": "string", "description": "First parameter"},
-               "param2": {"type": "integer", "description": "Second parameter", "default": 10}
-           },
-           "required": ["param1"]
-       }
+       "module": "handlers.gurddy"
    }
    ```
 
-3. **Verify consistency**:
+3. **Generate schemas and verify**:
    ```bash
+   # Auto-generate schemas from function signatures
+   python scripts/generate_registry.py
+   
+   # Verify consistency
    python scripts/verify_consistency.py
    pytest tests/test_consistency.py -v
    ```
 
-That's it! Both stdio and HTTP servers will automatically pick up the new tool.
+That's it! The schema is automatically generated from your function's type hints, and both stdio and HTTP servers will pick up the new tool.
 
 ### Custom Constraints
 ```python

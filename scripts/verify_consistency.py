@@ -2,6 +2,11 @@
 """Verify consistency between tool registry and server implementations."""
 
 import sys
+import inspect
+import importlib
+from pathlib import Path
+from typing import Dict, List, Any, Set
+
 from mcp_server.tool_registry import TOOLS, TOOL_SCHEMAS, get_tool_by_name
 from mcp_server.mcp_stdio_server import MCPStdioServer
 from mcp_server.core.tool_registry import get_registry
@@ -92,6 +97,71 @@ def verify_handlers():
     return True
 
 
+def get_function_signature_params(module_name: str, function_name: str) -> Set[str]:
+    """Get parameter names from function signature."""
+    try:
+        module = importlib.import_module(f"mcp_server.{module_name}")
+        func = getattr(module, function_name)
+        sig = inspect.signature(func)
+        return set(sig.parameters.keys())
+    except Exception as e:
+        print(f"    ⚠️  Error importing {module_name}.{function_name}: {e}")
+        return set()
+
+
+def get_schema_params(input_schema: Dict[str, Any]) -> Set[str]:
+    """Get parameter names from JSON schema."""
+    properties = input_schema.get("properties", {})
+    return set(properties.keys())
+
+
+def verify_schema_consistency():
+    """Verify consistency between tool schemas and function signatures."""
+    print("\n🔍 Verifying Schema-Function Consistency...")
+    
+    inconsistencies = []
+    
+    for tool in TOOLS:
+        tool_name = tool["name"]
+        module_name = tool["module"]
+        function_name = tool["function"]
+        input_schema = tool["inputSchema"]
+        
+        # Get parameter names from both sources
+        schema_params = get_schema_params(input_schema)
+        function_params = get_function_signature_params(module_name, function_name)
+        
+        if not function_params:
+            # Skip if we couldn't load the function
+            continue
+            
+        # Check for mismatches
+        missing_in_schema = function_params - schema_params
+        extra_in_schema = schema_params - function_params
+        
+        if missing_in_schema or extra_in_schema:
+            inconsistencies.append({
+                "tool_name": tool_name,
+                "missing_in_schema": list(missing_in_schema),
+                "extra_in_schema": list(extra_in_schema),
+                "schema_params": list(schema_params),
+                "function_params": list(function_params)
+            })
+    
+    if inconsistencies:
+        print(f"  ❌ Found {len(inconsistencies)} schema-function mismatches:")
+        for issue in inconsistencies:
+            print(f"    Tool '{issue['tool_name']}':")
+            if issue['missing_in_schema']:
+                print(f"      Missing in schema: {issue['missing_in_schema']}")
+            if issue['extra_in_schema']:
+                print(f"      Extra in schema: {issue['extra_in_schema']}")
+        return False
+    
+    print(f"  ✅ All {len(TOOLS)} tools have consistent schemas")
+    return True
+
+
 def verify_schemas():
     """Verify all tools have valid schemas."""
     print("\n🔍 Verifying Tool Schemas...")
@@ -128,6 +198,7 @@ def main():
     
     checks = [
         ("Schemas", verify_schemas),
+        ("Schema-Function Consistency", verify_schema_consistency),
         ("Handlers", verify_handlers),
         ("Stdio Server", verify_stdio_server),
         ("HTTP Server", verify_http_server),

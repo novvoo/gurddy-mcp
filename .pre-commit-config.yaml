@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: generate-schemas
+        name: Generate schemas from function signatures
+        entry: python scripts/generate_registry.py
+        language: system
+        files: ^(mcp_server/handlers/.*\.py|mcp_server/tool_definitions\.py)$
+        pass_filenames: false
+        
+      - id: verify-consistency
+        name: Verify schema consistency
+        entry: python scripts/verify_consistency.py
+        language: system
+        files: ^(mcp_server/.*\.py)$
+        pass_filenames: false
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203]

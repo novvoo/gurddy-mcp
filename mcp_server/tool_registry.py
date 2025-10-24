@@ -1,11 +1,15 @@
 """
 Central registry for all MCP tools and their metadata.
 This is the single source of truth for tool definitions.
+
+NOTE: Schemas are auto-generated from function signatures.
+Run `python scripts/generate_registry.py` to update.
 """
 
 from typing import List, Dict, Any
 
 # Tool definitions - single source of truth
+# Schemas auto-generated from function signatures
 TOOLS = [
     {
         "name": "info",
@@ -30,16 +34,16 @@ TOOLS = [
             "properties": {
                 "package": {
                     "type": "string",
-                    "description": "Package name to install",
-                    "default": "gurddy"
+                    "description": "Parameter package"
                 },
                 "upgrade": {
                     "type": "boolean",
-                    "description": "Whether to upgrade if already installed",
-                    "default": False
+                    "description": "Parameter upgrade"
                 }
             },
-            "required": []
+            "required": [
+                "package"
+            ]
         }
     },
     {
@@ -51,13 +55,14 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "example": {
+                "example_name": {
                     "type": "string",
-                    "description": "Example name to run",
-                    "enum": ["lp", "csp", "n_queens", "graph_coloring", "map_coloring", "scheduling", "logic_puzzles", "optimized_csp", "optimized_lp", "minimax", "scipy_optimization", "classic_problems"]
+                    "description": "Parameter example_name"
                 }
             },
-            "required": ["example"]
+            "required": [
+                "example_name"
+            ]
         }
     },
     {
@@ -71,8 +76,7 @@ TOOLS = [
             "properties": {
                 "n": {
                     "type": "integer",
-                    "description": "Board size (number of queens)",
-                    "default": 8
+                    "description": "Parameter n"
                 }
             },
             "required": []
@@ -89,14 +93,18 @@ TOOLS = [
             "properties": {
                 "puzzle": {
                     "type": "array",
-                    "description": "9x9 grid with 0 for empty cells",
                     "items": {
                         "type": "array",
-                        "items": {"type": "integer"}
-                    }
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "description": "Parameter puzzle"
                 }
             },
-            "required": ["puzzle"]
+            "required": [
+                "puzzle"
+            ]
         }
     },
     {
@@ -110,19 +118,27 @@ TOOLS = [
             "properties": {
                 "edges": {
                     "type": "array",
-                    "description": "List of edges as [vertex1, vertex2] pairs"
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "description": "Parameter edges"
                 },
                 "num_vertices": {
                     "type": "integer",
-                    "description": "Number of vertices"
+                    "description": "Parameter num_vertices"
                 },
                 "max_colors": {
                     "type": "integer",
-                    "description": "Maximum number of colors",
-                    "default": 4
+                    "description": "Parameter max_colors"
                 }
             },
-            "required": ["edges", "num_vertices"]
+            "required": [
+                "edges",
+                "num_vertices"
+            ]
         }
     },
     {
@@ -136,19 +152,30 @@ TOOLS = [
             "properties": {
                 "regions": {
                     "type": "array",
-                    "description": "List of region names"
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Parameter regions"
                 },
                 "adjacencies": {
                     "type": "array",
-                    "description": "List of adjacent region pairs"
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "Parameter adjacencies"
                 },
                 "max_colors": {
                     "type": "integer",
-                    "description": "Maximum number of colors",
-                    "default": 4
+                    "description": "Parameter max_colors"
                 }
             },
-            "required": ["regions", "adjacencies"]
+            "required": [
+                "regions",
+                "adjacencies"
+            ]
         }
     },
     {
@@ -160,25 +187,14 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "profits": {
+                "problem": {
                     "type": "object",
-                    "description": "Dictionary mapping product names to profit coefficients (objective function)"
-                },
-                "consumption": {
-                    "type": "object",
-                    "description": "Dictionary mapping product names to resource consumption (dict of resource->amount)"
-                },
-                "capacities": {
-                    "type": "object",
-                    "description": "Dictionary mapping resource names to capacity limits"
-                },
-                "integer": {
-                    "type": "boolean",
-                    "description": "Whether to use integer variables (MIP) or continuous (LP)",
-                    "default": True
+                    "description": "Parameter problem"
                 }
             },
-            "required": ["profits", "consumption", "capacities"]
+            "required": [
+                "problem"
+            ]
         }
     },
     {
@@ -192,28 +208,30 @@ TOOLS = [
             "properties": {
                 "profits": {
                     "type": "object",
-                    "description": "Dictionary mapping product names to profit per unit"
+                    "description": "Parameter profits"
                 },
                 "consumption": {
                     "type": "object",
-                    "description": "Dictionary mapping product names to resource consumption"
+                    "description": "Parameter consumption"
                 },
                 "capacities": {
                     "type": "object",
-                    "description": "Dictionary mapping resource names to available capacity"
+                    "description": "Parameter capacities"
                 },
                 "integer": {
                     "type": "boolean",
-                    "description": "Whether production quantities must be integers",
-                    "default": True
+                    "description": "Parameter integer"
                 },
                 "sensitivity_analysis": {
                     "type": "boolean",
-                    "description": "Whether to perform sensitivity analysis",
-                    "default": False
+                    "description": "Parameter sensitivity_analysis"
                 }
             },
-            "required": ["profits", "consumption", "capacities"]
+            "required": [
+                "profits",
+                "consumption",
+                "capacities"
+            ]
         }
     },
     {
@@ -227,20 +245,22 @@ TOOLS = [
             "properties": {
                 "payoff_matrix": {
                     "type": "array",
-                    "description": "2D array representing payoffs from row player's perspective",
                     "items": {
                         "type": "array",
-                        "items": {"type": "number"}
-                    }
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "description": "Parameter payoff_matrix"
                 },
                 "player": {
                     "type": "string",
-                    "description": "Which player's strategy to solve for: 'row' (maximizer) or 'col' (minimizer)",
-                    "enum": ["row", "col"],
-                    "default": "row"
+                    "description": "Parameter player"
                 }
             },
-            "required": ["payoff_matrix"]
+            "required": [
+                "payoff_matrix"
+            ]
         }
     },
     {
@@ -254,27 +274,31 @@ TOOLS = [
             "properties": {
                 "scenarios": {
                     "type": "array",
-                    "description": "List of scenarios, each mapping decision variables to loss/gain coefficients",
-                    "items": {"type": "object"}
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "Parameter scenarios"
                 },
                 "decision_vars": {
                     "type": "array",
-                    "description": "List of decision variable names",
-                    "items": {"type": "string"}
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Parameter decision_vars"
                 },
                 "budget": {
                     "type": "number",
-                    "description": "Total budget constraint",
-                    "default": 100.0
+                    "description": "Parameter budget"
                 },
                 "objective": {
                     "type": "string",
-                    "description": "Optimization objective",
-                    "enum": ["minimize_max_loss", "maximize_min_gain"],
-                    "default": "minimize_max_loss"
+                    "description": "Parameter objective"
                 }
             },
-            "required": ["scenarios", "decision_vars"]
+            "required": [
+                "scenarios",
+                "decision_vars"
+            ]
         }
     },
     {
@@ -288,13 +312,15 @@ TOOLS = [
             "properties": {
                 "numbers": {
                     "type": "array",
-                    "description": "List of exactly 4 integers",
-                    "items": {"type": "integer"},
-                    "minItems": 4,
-                    "maxItems": 4
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "Parameter numbers"
                 }
             },
-            "required": ["numbers"]
+            "required": [
+                "numbers"
+            ]
         }
     },
     {
@@ -308,14 +334,17 @@ TOOLS = [
             "properties": {
                 "total_heads": {
                     "type": "integer",
-                    "description": "Total number of heads"
+                    "description": "Parameter total_heads"
                 },
                 "total_legs": {
                     "type": "integer",
-                    "description": "Total number of legs"
+                    "description": "Parameter total_legs"
                 }
             },
-            "required": ["total_heads", "total_legs"]
+            "required": [
+                "total_heads",
+                "total_legs"
+            ]
         }
     },
     {
@@ -329,24 +358,30 @@ TOOLS = [
             "properties": {
                 "expected_returns": {
                     "type": "array",
-                    "description": "Expected returns for each asset",
-                    "items": {"type": "number"}
+                    "items": {
+                        "type": "number"
+                    },
+                    "description": "Parameter expected_returns"
                 },
                 "covariance_matrix": {
                     "type": "array",
-                    "description": "Covariance matrix (2D array)",
                     "items": {
                         "type": "array",
-                        "items": {"type": "number"}
-                    }
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "description": "Parameter covariance_matrix"
                 },
                 "risk_tolerance": {
                     "type": "number",
-                    "description": "Risk tolerance parameter",
-                    "default": 1.0
+                    "description": "Parameter risk_tolerance"
                 }
             },
-            "required": ["expected_returns", "covariance_matrix"]
+            "required": [
+                "expected_returns",
+                "covariance_matrix"
+            ]
         }
     },
     {
@@ -360,17 +395,19 @@ TOOLS = [
             "properties": {
                 "data": {
                     "type": "array",
-                    "description": "List of data points",
-                    "items": {"type": "number"}
+                    "items": {
+                        "type": "number"
+                    },
+                    "description": "Parameter data"
                 },
                 "distribution": {
                     "type": "string",
-                    "description": "Distribution type to fit",
-                    "enum": ["normal", "exponential", "uniform"],
-                    "default": "normal"
+                    "description": "Parameter distribution"
                 }
             },
-            "required": ["data"]
+            "required": [
+                "data"
+            ]
         }
     },
     {
@@ -384,43 +421,47 @@ TOOLS = [
             "properties": {
                 "customer_locations": {
                     "type": "array",
-                    "description": "List of [x, y] coordinates for customers",
                     "items": {
                         "type": "array",
-                        "items": {"type": "number"},
-                        "minItems": 2,
-                        "maxItems": 2
-                    }
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "description": "Parameter customer_locations"
                 },
                 "customer_demands": {
                     "type": "array",
-                    "description": "List of demand values for each customer",
-                    "items": {"type": "number"}
+                    "items": {
+                        "type": "number"
+                    },
+                    "description": "Parameter customer_demands"
                 },
                 "facility_locations": {
                     "type": "array",
-                    "description": "List of [x, y] coordinates for potential facilities",
                     "items": {
                         "type": "array",
-                        "items": {"type": "number"},
-                        "minItems": 2,
-                        "maxItems": 2
-                    }
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "description": "Parameter facility_locations"
                 },
                 "max_facilities": {
                     "type": "integer",
-                    "description": "Maximum number of facilities to select",
-                    "default": 2
+                    "description": "Parameter max_facilities"
                 },
                 "fixed_cost": {
                     "type": "number",
-                    "description": "Fixed cost for opening each facility",
-                    "default": 100.0
+                    "description": "Parameter fixed_cost"
                 }
             },
-            "required": ["customer_locations", "customer_demands", "facility_locations"]
+            "required": [
+                "customer_locations",
+                "customer_demands",
+                "facility_locations"
+            ]
         }
-    },
+    }
 ]
 
 

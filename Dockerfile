@@ -13,10 +13,11 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 # Copy codes
 COPY . . 
 
-
-# Install the package
+# Install the package in development mode
 RUN pip install --no-cache-dir --upgrade .
 
+# Generate schemas from function signatures to ensure consistency
+RUN python scripts/generate_registry.py
 
 # Expose port for MCP HTTP server
 EXPOSE 8080
